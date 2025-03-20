@@ -160,7 +160,7 @@ public class DateTime extends Date {
 	 * @since 4.1.2
 	 */
 	public DateTime(Date date, TimeZone timeZone) {
-		this(ObjectUtil.defaultIfNull(date, new Date()).getTime(), timeZone);
+		this(ObjectUtil.defaultIfNull(date, () -> new Date()).getTime(), timeZone);
 	}
 
 	/**
@@ -1090,6 +1090,13 @@ public class DateTime extends Date {
 			String pattern;
 			if (dateFormat instanceof SimpleDateFormat) {
 				pattern = ((SimpleDateFormat) dateFormat).toPattern();
+
+				// issue#3713 尝试使用US Locale解析
+				try {
+					return DateUtil.newSimpleFormat(pattern, Locale.US, null).parse(dateStr.toString());
+				} catch (Exception ignore) {
+					// ignore
+				}
 			} else {
 				pattern = dateFormat.toString();
 			}

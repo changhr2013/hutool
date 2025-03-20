@@ -5,7 +5,10 @@ import cn.hutool.core.img.Img;
 import cn.hutool.core.img.ImgUtil;
 import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.io.IoUtil;
-import cn.hutool.core.lang.ansi.*;
+import cn.hutool.core.lang.ansi.AnsiColors;
+import cn.hutool.core.lang.ansi.AnsiElement;
+import cn.hutool.core.lang.ansi.AnsiEncoder;
+import cn.hutool.core.lang.ansi.ForeOrBack;
 import cn.hutool.core.util.CharsetUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.core.util.URLUtil;
@@ -377,7 +380,7 @@ public class QrCodeUtil {
 			}
 
 			Img.from(image).pressImage(//
-					Img.from(logoImg).round(0.3).getImg(), // 圆角
+					Img.from(logoImg).round(config.round).getImg(), // 圆角
 					new Rectangle(width, height), //
 					1//
 			);
@@ -459,7 +462,13 @@ public class QrCodeUtil {
 	 * @return 解码文本
 	 */
 	public static String decode(InputStream qrCodeInputStream) {
-		return decode(ImgUtil.read(qrCodeInputStream));
+		BufferedImage image = null;
+		try{
+			image = ImgUtil.read(qrCodeInputStream);
+			return decode(image);
+		} finally {
+			ImgUtil.flush(image);
+		}
 	}
 
 	/**
@@ -469,7 +478,13 @@ public class QrCodeUtil {
 	 * @return 解码文本
 	 */
 	public static String decode(File qrCodeFile) {
-		return decode(ImgUtil.read(qrCodeFile));
+		BufferedImage image = null;
+		try{
+			image = ImgUtil.read(qrCodeFile);
+			return decode(image);
+		} finally {
+			ImgUtil.flush(image);
+		}
 	}
 
 	/**

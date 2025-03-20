@@ -13,10 +13,12 @@
 package cn.hutool.http;
 
 import cn.hutool.core.lang.Console;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 public class IssueI7WZEOTest {
 	@Test
+	@Disabled
 	public void postTest() {
 		final String post = HttpUtil.post("https://tenapi.cn/v2/video", "url=https://v.douyin.com/ie1EX3LH/");
 		Console.log(post);

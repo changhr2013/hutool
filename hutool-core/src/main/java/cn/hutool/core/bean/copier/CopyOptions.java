@@ -4,6 +4,7 @@ import cn.hutool.core.bean.PropDesc;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.convert.TypeConverter;
+import cn.hutool.core.convert.impl.DateConverter;
 import cn.hutool.core.lang.Editor;
 import cn.hutool.core.lang.func.Func1;
 import cn.hutool.core.lang.func.LambdaUtil;
@@ -14,6 +15,7 @@ import cn.hutool.core.util.StrUtil;
 import java.io.Serializable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Type;
+import java.util.Date;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -95,6 +97,11 @@ public class CopyOptions implements Serializable {
 
 		return Convert.convertWithCheck(type, value, null, ignoreError);
 	};
+
+	/**
+	 * 在Bean转换时，如果源是String，目标对象是Date或LocalDateTime，则可自定义转换格式
+	 */
+	private String formatIfDate;
 
 	//region create
 
@@ -329,7 +336,14 @@ public class CopyOptions implements Serializable {
 
 	/**
 	 * 设置是否自动转换为驼峰方式<br>
-	 * 一般用于map转bean和bean转bean出现非驼峰格式时，在尝试转换失败的情况下，是否二次检查转为驼峰匹配
+	 * 一般用于map转bean和bean转bean出现非驼峰格式时，在尝试转换失败的情况下，是否二次检查转为驼峰匹配<br>
+	 * 此设置用于解决Bean和Map转换中的匹配问题而设置，并不是一个强制参数。
+	 * <ol>
+	 *     <li>当map转bean时，如果map中是下划线等非驼峰模式，自动匹配对应的驼峰字段，避免出现字段不拷贝问题。</li>
+	 *     <li>当bean转bean时，由于字段命名不规范，使用了非驼峰方式，增加兼容性。</li>
+	 * </ol>
+	 * <p>
+	 * 但是bean转Map和map转map时，没有使用这个参数，是因为没有匹配的必要，转map不存在无法匹配到的问题，因此此参数无效。
 	 *
 	 * @param autoTransCamelCase 是否自动转换为驼峰方式
 	 * @return this
@@ -353,6 +367,24 @@ public class CopyOptions implements Serializable {
 	}
 
 	/**
+	 * 获取日期格式，用于日期转字符串，默认为{@code null}
+	 * @return 日期格式
+	 */
+	public String getFormatIfDate() {
+		return formatIfDate;
+	}
+
+	/**
+	 * 设置日期格式，用于日期转字符串，默认为{@code null}
+	 * @param formatIfDate 日期格式
+	 * @return this
+	 */
+	public CopyOptions setFormatIfDate(String formatIfDate) {
+		this.formatIfDate = formatIfDate;
+		return this;
+	}
+
+	/**
 	 * 使用自定义转换器转换字段值<br>
 	 * 如果自定义转换器为{@code null}，则返回原值。
 	 *
@@ -361,7 +393,12 @@ public class CopyOptions implements Serializable {
 	 * @return 编辑后的字段值
 	 * @since 5.8.0
 	 */
+	@SuppressWarnings({"unchecked", "rawtypes"})
 	protected Object convertField(Type targetType, Object fieldValue) {
+		if((targetType instanceof Class && Date.class.isAssignableFrom((Class<?>) targetType)) && null != this.formatIfDate){
+			return new DateConverter((Class) targetType, this.formatIfDate).convert(fieldValue, null);
+		}
+
 		return (null != this.converter) ?
 			this.converter.convert(targetType, fieldValue) : fieldValue;
 	}

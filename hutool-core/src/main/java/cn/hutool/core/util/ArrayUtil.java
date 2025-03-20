@@ -6,10 +6,7 @@ import cn.hutool.core.collection.UniqueKeySet;
 import cn.hutool.core.comparator.CompareUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.exceptions.UtilException;
-import cn.hutool.core.lang.Assert;
-import cn.hutool.core.lang.Editor;
-import cn.hutool.core.lang.Filter;
-import cn.hutool.core.lang.Matcher;
+import cn.hutool.core.lang.*;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.text.StrJoiner;
 
@@ -1827,21 +1824,34 @@ public class ArrayUtil extends PrimitiveArrayUtil {
 	 * @since 5.4.8
 	 */
 	public static <T> int indexOfSub(T[] array, int beginInclude, T[] subArray) {
-		if (isEmpty(array) || isEmpty(subArray) || subArray.length > array.length) {
+		if (isEmpty(array) || isEmpty(subArray)) {
 			return INDEX_NOT_FOUND;
 		}
-		int firstIndex = indexOf(array, subArray[0], beginInclude);
-		if (firstIndex < 0 || firstIndex + subArray.length > array.length) {
+		if(beginInclude < 0){
+			beginInclude += array.length;
+		}
+		if(beginInclude < 0 || beginInclude > array.length - 1){
+			return INDEX_NOT_FOUND;
+		}
+		if (array.length - beginInclude < subArray.length) {
+			// 剩余长度不足
 			return INDEX_NOT_FOUND;
 		}
 
-		for (int i = 0; i < subArray.length; i++) {
-			if (false == ObjectUtil.equal(array[i + firstIndex], subArray[i])) {
-				return indexOfSub(array, firstIndex + 1, subArray);
+		for (int i = beginInclude; i <= array.length - subArray.length; i++) {
+			boolean found = true;
+			for (int j = 0; j < subArray.length; j++) {
+				if (ObjUtil.notEqual(array[i + j], subArray[j])) {
+					found = false;
+					break;
+				}
+			}
+			if (found) {
+				return i;
 			}
 		}
 
-		return firstIndex;
+		return INDEX_NOT_FOUND;
 	}
 
 	/**
@@ -1864,29 +1874,45 @@ public class ArrayUtil extends PrimitiveArrayUtil {
 	 * 查找最后一个子数组的开始位置
 	 *
 	 * @param array      数组
-	 * @param endInclude 查找结束的位置（包含）
+	 * @param endInclude 查找结束的位置（包含），-1表示最后一位
 	 * @param subArray   子数组
 	 * @param <T>        数组元素类型
 	 * @return 最后一个子数组的开始位置，即子数字第一个元素在数组中的位置
 	 * @since 5.4.8
 	 */
 	public static <T> int lastIndexOfSub(T[] array, int endInclude, T[] subArray) {
-		if (isEmpty(array) || isEmpty(subArray) || subArray.length > array.length || endInclude < 0) {
+		if (isEmpty(array) || isEmpty(subArray)) {
+			return INDEX_NOT_FOUND;
+		}
+		if (endInclude < 0) {
+			endInclude += array.length;
+		}
+		if (endInclude < 0) {
+			return INDEX_NOT_FOUND;
+		}
+		if (endInclude > array.length - 1) {
+			// 结束位置超过最大值
+			endInclude = array.length - 1;
+		}
+		if (subArray.length - 1 > endInclude) {
+			// 剩余长度不足
 			return INDEX_NOT_FOUND;
 		}
 
-		int firstIndex = lastIndexOf(array, subArray[0]);
-		if (firstIndex < 0 || firstIndex + subArray.length > array.length) {
-			return INDEX_NOT_FOUND;
-		}
-
-		for (int i = 0; i < subArray.length; i++) {
-			if (false == ObjectUtil.equal(array[i + firstIndex], subArray[i])) {
-				return lastIndexOfSub(array, firstIndex - 1, subArray);
+		for (int i = Math.min(array.length - subArray.length, endInclude); i >= 0; i--) {
+			boolean found = true;
+			for (int j = 0; j < subArray.length; j++) {
+				if (ObjUtil.notEqual(array[i + j], subArray[j])) {
+					found = false;
+					break;
+				}
+			}
+			if (found) {
+				return i;
 			}
 		}
 
-		return firstIndex;
+		return INDEX_NOT_FOUND;
 	}
 
 	// O(n)时间复杂度检查数组是否有序

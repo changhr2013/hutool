@@ -5,6 +5,7 @@ import cn.hutool.core.convert.NumberChineseFormatter;
 import cn.hutool.core.date.format.DateParser;
 import cn.hutool.core.date.format.FastDateParser;
 import cn.hutool.core.date.format.GlobalCustomFormat;
+import cn.hutool.core.util.ObjUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
 
@@ -62,7 +63,7 @@ public class CalendarUtil {
 	/**
 	 * 转换为Calendar对象
 	 *
-	 * @param millis 时间戳
+	 * @param millis   时间戳
 	 * @param timeZone 时区
 	 * @return Calendar对象
 	 * @since 5.7.22
@@ -355,16 +356,33 @@ public class CalendarUtil {
 		if (cal1 == null || cal2 == null) {
 			throw new IllegalArgumentException("The date must not be null");
 		}
+
+		if(ObjUtil.notEqual(cal1.getTimeZone(), cal2.getTimeZone())){
+			// 统一时区
+			cal2 = changeTimeZone(cal2, cal1.getTimeZone());
+		}
+
 		return cal1.get(Calendar.DAY_OF_YEAR) == cal2.get(Calendar.DAY_OF_YEAR) && //
-				cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) && //
-				cal1.get(Calendar.ERA) == cal2.get(Calendar.ERA);
+			cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) && //
+			cal1.get(Calendar.ERA) == cal2.get(Calendar.ERA);
+	}
+
+	/**
+	 * 是否为本月最后一天
+	 *
+	 * @param calendar {@link Calendar}
+	 * @return 是否为本月最后一天
+	 * @since 5.8.27
+	 */
+	public static boolean isLastDayOfMonth(Calendar calendar) {
+		return calendar.get(Calendar.DAY_OF_MONTH) == calendar.getActualMaximum(Calendar.DAY_OF_MONTH);
 	}
 
 	/**
 	 * 比较两个日期是否为同一周
 	 *
-	 * @param cal1 日期1
-	 * @param cal2 日期2
+	 * @param cal1  日期1
+	 * @param cal2  日期2
 	 * @param isMon 是否为周一。国内第一天为星期一，国外第一天为星期日
 	 * @return 是否为同一周
 	 * @since 5.7.21
@@ -407,10 +425,16 @@ public class CalendarUtil {
 		if (cal1 == null || cal2 == null) {
 			throw new IllegalArgumentException("The date must not be null");
 		}
+
+		if(ObjUtil.notEqual(cal1.getTimeZone(), cal2.getTimeZone())){
+			// 统一时区
+			cal2 = changeTimeZone(cal2, cal1.getTimeZone());
+		}
+
 		return cal1.get(Calendar.YEAR) == cal2.get(Calendar.YEAR) && //
-				cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
-				// issue#3011@Github
-				cal1.get(Calendar.ERA) == cal2.get(Calendar.ERA);
+			cal1.get(Calendar.MONTH) == cal2.get(Calendar.MONTH) &&
+			// issue#3011@Github
+			cal1.get(Calendar.ERA) == cal2.get(Calendar.ERA);
 	}
 
 	/**
@@ -657,7 +681,7 @@ public class CalendarUtil {
 		int age = year - cal.get(Calendar.YEAR);
 
 		//当前日期，则为0岁
-		if (age == 0){
+		if (age == 0) {
 			return 0;
 		}
 
@@ -776,5 +800,18 @@ public class CalendarUtil {
 		calendar.setLenient(lenient);
 
 		return parser.parse(StrUtil.str(str), new ParsePosition(0), calendar) ? calendar : null;
+	}
+
+	/**
+	 * 转换为默认时区的Calendar
+	 *
+	 * @param cal 时间
+	 * @return 默认时区的calendar对象
+	 */
+	private static Calendar changeTimeZone(Calendar cal, TimeZone timeZone) {
+		// 转换到统一时区，例如UTC
+		cal = (Calendar) cal.clone();
+		cal.setTimeZone(timeZone);
+		return cal;
 	}
 }

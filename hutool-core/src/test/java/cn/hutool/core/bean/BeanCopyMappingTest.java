@@ -4,13 +4,13 @@ import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.map.MapUtil;
 import lombok.Builder;
 import lombok.Data;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 public class BeanCopyMappingTest {
 
 	/**
-	 * https://gitee.com/dromara/hutool/issues/I4C48U <br>
+	 * https://gitee.com/chinabugotech/hutool/issues/I4C48U <br>
 	 * 传递复制不要用注解别名，应该用动态映射
 	 */
 	@Test
@@ -24,7 +24,7 @@ public class BeanCopyMappingTest {
 		BeanUtil.copyProperties(b, a, copyOptions);
 		BeanUtil.copyProperties(a, c);
 
-		Assert.assertEquals("12312312", c.getCarNo());
+		assertEquals("12312312", c.getCarNo());
 	}
 
 	@Data

@@ -35,7 +35,7 @@ public class ThreadUtil {
 	 * @param corePoolSize 同时执行的线程数大小
 	 * @return ExecutorService
 	 */
-	public static ExecutorService newExecutor(int corePoolSize) {
+	public static ThreadPoolExecutor newExecutor(int corePoolSize) {
 		ExecutorBuilder builder = ExecutorBuilder.create();
 		if (corePoolSize > 0) {
 			builder.setCorePoolSize(corePoolSize);
@@ -54,7 +54,7 @@ public class ThreadUtil {
 	 *
 	 * @return ExecutorService
 	 */
-	public static ExecutorService newExecutor() {
+	public static ThreadPoolExecutor newExecutor() {
 		return ExecutorBuilder.create().useSynchronousQueue().build();
 	}
 
@@ -102,7 +102,7 @@ public class ThreadUtil {
 	 * @return {@link ThreadPoolExecutor}
 	 * @since 5.4.1
 	 */
-	public static ExecutorService newExecutor(int corePoolSize, int maximumPoolSize, int maximumQueueSize) {
+	public static ThreadPoolExecutor newExecutor(int corePoolSize, int maximumPoolSize, int maximumQueueSize) {
 		return ExecutorBuilder.create()
 				.setCorePoolSize(corePoolSize)
 				.setMaxPoolSize(maximumPoolSize)
@@ -147,7 +147,7 @@ public class ThreadUtil {
 	 * @author luozongle
 	 * @since 5.8.0
 	 */
-	public static ExecutorService newFixedExecutor(int nThreads, String threadNamePrefix, boolean isBlocked) {
+	public static ThreadPoolExecutor newFixedExecutor(int nThreads, String threadNamePrefix, boolean isBlocked) {
 		return newFixedExecutor(nThreads, 1024, threadNamePrefix, isBlocked);
 	}
 
@@ -167,7 +167,7 @@ public class ThreadUtil {
 	 * @author luozongle
 	 * @since 5.8.0
 	 */
-	public static ExecutorService newFixedExecutor(int nThreads, int maximumQueueSize, String threadNamePrefix, boolean isBlocked) {
+	public static ThreadPoolExecutor newFixedExecutor(int nThreads, int maximumQueueSize, String threadNamePrefix, boolean isBlocked) {
 		return newFixedExecutor(nThreads, maximumQueueSize, threadNamePrefix,
 				(isBlocked ? RejectPolicy.BLOCK : RejectPolicy.ABORT).getValue());
 	}
@@ -187,7 +187,7 @@ public class ThreadUtil {
 	 * @author luozongle
 	 * @since 5.8.0
 	 */
-	public static ExecutorService newFixedExecutor(int nThreads,
+	public static ThreadPoolExecutor newFixedExecutor(int nThreads,
 												   int maximumQueueSize,
 												   String threadNamePrefix,
 												   RejectedExecutionHandler handler) {
@@ -384,18 +384,14 @@ public class ThreadUtil {
 	public static boolean safeSleep(long millis) {
 		long done = 0;
 		long before;
-		long spendTime;
-		while (done >= 0 && done < millis) {
-			before = System.currentTimeMillis();
-			if (false == sleep(millis - done)) {
+		// done表示实际花费的时间，确保实际花费时间大于应该sleep的时间
+		while (done < millis) {
+			before = System.nanoTime();
+			if (!sleep(millis - done)) {
 				return false;
 			}
-			spendTime = System.currentTimeMillis() - before;
-			if (spendTime <= 0) {
-				// Sleep花费时间为0或者负数，说明系统时间被拨动
-				break;
-			}
-			done += spendTime;
+			// done始终为正
+			done += (System.nanoTime() - before) / 1_000_000;
 		}
 		return true;
 	}

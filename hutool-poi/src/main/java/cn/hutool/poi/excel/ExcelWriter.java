@@ -20,31 +20,17 @@ import cn.hutool.poi.excel.cell.CellLocation;
 import cn.hutool.poi.excel.cell.CellUtil;
 import cn.hutool.poi.excel.style.Align;
 import org.apache.poi.common.usermodel.Hyperlink;
-import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
-import org.apache.poi.ss.usermodel.ClientAnchor;
-import org.apache.poi.ss.usermodel.DataValidation;
-import org.apache.poi.ss.usermodel.DataValidationConstraint;
-import org.apache.poi.ss.usermodel.DataValidationHelper;
-import org.apache.poi.ss.usermodel.Drawing;
-import org.apache.poi.ss.usermodel.Font;
-import org.apache.poi.ss.usermodel.HeaderFooter;
-import org.apache.poi.ss.usermodel.Row;
-import org.apache.poi.ss.usermodel.Sheet;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.ss.util.CellRangeAddress;
 import org.apache.poi.ss.util.CellRangeAddressList;
 import org.apache.poi.xssf.usermodel.XSSFDataValidation;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.Charset;
-import java.util.Comparator;
-import java.util.Iterator;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -250,9 +236,22 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	 * @since 4.0.12
 	 */
 	public ExcelWriter autoSizeColumnAll() {
+		return autoSizeColumnAll(0f);
+	}
+
+	/**
+	 * 设置所有列为自动宽度，不考虑合并单元格<br>
+	 * 此方法必须在指定列数据完全写出后调用才有效。<br>
+	 * 列数计算是通过第一行计算的
+	 *
+	 * @param widthRatio 列宽的倍数。如果所有内容都是英文，可以设为1，如果有中文，建议设置为 1.6-2.0之间。
+	 * @return this
+	 * @since 5.8.30
+	 */
+	public ExcelWriter autoSizeColumnAll(float widthRatio) {
 		final int columnCount = this.getColumnCount();
 		for (int i = 0; i < columnCount; i++) {
-			autoSizeColumn(i);
+			autoSizeColumn(i, widthRatio);
 		}
 		return this;
 	}
@@ -266,8 +265,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	 * @since 4.0.12
 	 */
 	public ExcelWriter autoSizeColumn(int columnIndex) {
-		this.sheet.autoSizeColumn(columnIndex);
-		return this;
+		return autoSizeColumn(columnIndex, false);
 	}
 
 	/**
@@ -280,7 +278,38 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	 * @since 3.3.0
 	 */
 	public ExcelWriter autoSizeColumn(int columnIndex, boolean useMergedCells) {
-		this.sheet.autoSizeColumn(columnIndex, useMergedCells);
+		return autoSizeColumn(columnIndex, useMergedCells, 0f);
+	}
+
+	/**
+	 * 设置某列为自动宽度。注意有中文的情况下，需要根据需求调整宽度扩大比例。<br>
+	 * 此方法必须在指定列数据完全写出后调用才有效。
+	 *
+	 * @param columnIndex 第几列，从0计数
+	 * @param widthRatio  列宽的倍数。如果所有内容都是英文，可以设为1，如果有中文，建议设置为 1.6-2.0之间。
+	 * @return this
+	 * @since 5.8.30
+	 */
+	public ExcelWriter autoSizeColumn(int columnIndex, float widthRatio) {
+		return autoSizeColumn(columnIndex, false, widthRatio);
+	}
+
+	/**
+	 * 设置某列为自动宽度。注意有中文的情况下，需要根据需求调整宽度扩大比例。<br>
+	 * 此方法必须在指定列数据完全写出后调用才有效。
+	 *
+	 * @param columnIndex    第几列，从0计数
+	 * @param useMergedCells 是否适用于合并单元格
+	 * @param widthRatio     列宽的倍数。如果所有内容都是英文，可以设为1，如果有中文，建议设置为 1.6-2.0之间。
+	 * @return this
+	 * @since 5.8.30
+	 */
+	public ExcelWriter autoSizeColumn(int columnIndex, boolean useMergedCells, float widthRatio) {
+		if (widthRatio > 0) {
+			sheet.setColumnWidth(columnIndex, (int) (sheet.getColumnWidth(columnIndex) * widthRatio));
+		} else {
+			sheet.autoSizeColumn(columnIndex, useMergedCells);
+		}
 		return this;
 	}
 
@@ -480,6 +509,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 
 	/**
 	 * 设置是否只保留别名中的字段值，如果为true，则不设置alias的字段将不被输出，false表示原样输出
+	 * Bean中设置@Alias时，setOnlyAlias是无效的，这个参数只和addHeaderAlias配合使用，原因是注解是Bean内部的操作，而addHeaderAlias是Writer的操作，不互通。
 	 *
 	 * @param isOnlyAlias 是否只保留别名中的字段值
 	 * @return this
@@ -519,7 +549,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	 * 设置列宽（单位为一个字符的宽度，例如传入width为10，表示10个字符的宽度）
 	 *
 	 * @param columnIndex 列号（从0开始计数，-1表示所有列的默认宽度）
-	 * @param width       宽度（单位1~256个字符宽度）
+	 * @param width       宽度（单位1~255个字符宽度）
 	 * @return this
 	 * @since 4.0.8
 	 */
@@ -588,6 +618,26 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 				break;
 		}
 		return this;
+	}
+
+	/**
+	 * 设置忽略错误，即Excel中的绿色警告小标，只支持XSSFSheet<br>
+	 * 见：https://stackoverflow.com/questions/23488221/how-to-remove-warning-in-excel-using-apache-poi-in-java
+	 *
+	 * @param cellRangeAddress  指定单元格范围
+	 * @param ignoredErrorTypes 忽略的错误类型列表
+	 * @return this
+	 * @throws UnsupportedOperationException 如果sheet不是XSSFSheet
+	 * @since 5.8.28
+	 */
+	public ExcelWriter addIgnoredErrors(final CellRangeAddress cellRangeAddress, final IgnoredErrorType... ignoredErrorTypes) throws UnsupportedOperationException {
+		final Sheet sheet = this.sheet;
+		if (sheet instanceof XSSFSheet) {
+			((XSSFSheet) sheet).addIgnoredErrors(cellRangeAddress, ignoredErrorTypes);
+			return this;
+		}
+
+		throw new UnsupportedOperationException("Only XSSFSheet supports addIgnoredErrors");
 	}
 
 	/**
@@ -815,11 +865,20 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 		boolean isFirstRow = true;
 		Map<?, ?> map;
 		for (Object obj : data) {
-			if (obj instanceof Map) {
-				map = new TreeMap<>(comparator);
-				map.putAll((Map) obj);
+			// 只第一行使用比较器排序
+			if (isFirstRow) {
+				if (obj instanceof Map) {
+					map = new TreeMap<>(comparator);
+					map.putAll((Map) obj);
+				} else {
+					map = BeanUtil.beanToMap(obj, new TreeMap<>(comparator), false, false);
+				}
 			} else {
-				map = BeanUtil.beanToMap(obj, new TreeMap<>(comparator), false, false);
+				if (obj instanceof Map) {
+					map = (Map) obj;
+				} else {
+					map = BeanUtil.beanToMap(obj, new HashMap<>(), false, false);
+				}
 			}
 			writeRow(map, isFirstRow);
 			if (isFirstRow) {
@@ -889,7 +948,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	public ExcelWriter writeImg(File imgFile, int imgType, int dx1, int dy1, int dx2,
 								int dy2, int col1, int row1, int col2, int row2) {
 		return writeImg(FileUtil.readBytes(imgFile), imgType, dx1,
-				dy1, dx2, dy2, col1, row1, col2, row2);
+			dy1, dx2, dy2, col1, row1, col2, row2);
 	}
 
 	/**
@@ -1019,7 +1078,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 		} else if (rowBean instanceof Hyperlink) {
 			// Hyperlink当成一个值
 			return writeRow(CollUtil.newArrayList(rowBean), isWriteKeyAsHead);
-		} else if (BeanUtil.isBean(rowBean.getClass())) {
+		} else if (BeanUtil.isReadableBean(rowBean.getClass())) {
 			if (MapUtil.isEmpty(this.headerAlias)) {
 				rowMap = BeanUtil.beanToMap(rowBean, new LinkedHashMap<>(), false, false);
 			} else {
@@ -1106,7 +1165,7 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	 * @param isWriteKeyAsHead 是否将Map的Key作为表头输出，如果为True第一行为表头，紧接着为values
 	 * @return this
 	 */
-	public ExcelWriter writeCol(Map<?,? extends Iterable<?>> colMap, boolean isWriteKeyAsHead){
+	public ExcelWriter writeCol(Map<?, ? extends Iterable<?>> colMap, boolean isWriteKeyAsHead) {
 		return writeCol(colMap, 0, isWriteKeyAsHead);
 	}
 
@@ -1121,12 +1180,12 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	 * @param isWriteKeyAsHead 是否将Map的Key作为表头输出，如果为True第一行为表头，紧接着为values
 	 * @return this
 	 */
-	public ExcelWriter writeCol(Map<?,? extends Iterable<?>> colMap, int startColIndex, boolean isWriteKeyAsHead){
+	public ExcelWriter writeCol(Map<?, ? extends Iterable<?>> colMap, int startColIndex, boolean isWriteKeyAsHead) {
 		for (Object k : colMap.keySet()) {
 			Iterable<?> v = colMap.get(k);
-			if(v != null){
-				writeCol(isWriteKeyAsHead?k:null,startColIndex, v, startColIndex != colMap.size() - 1);
-				startColIndex ++;
+			if (v != null) {
+				writeCol(isWriteKeyAsHead ? k : null, startColIndex, v, startColIndex != colMap.size() - 1);
+				startColIndex++;
 			}
 		}
 		return this;
@@ -1144,8 +1203,8 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	 * @param isResetRowIndex 如果为true，写入完毕后Row index 将会重置为写入之前的未知，如果为false，写入完毕后Row index将会在写完的数据下方
 	 * @return this
 	 */
-	public ExcelWriter writeCol(Object headerVal, Iterable<?> colData, boolean isResetRowIndex){
-		return writeCol(headerVal,0,colData,isResetRowIndex);
+	public ExcelWriter writeCol(Object headerVal, Iterable<?> colData, boolean isResetRowIndex) {
+		return writeCol(headerVal, 0, colData, isResetRowIndex);
 	}
 
 	/**
@@ -1160,18 +1219,18 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	 * @param isResetRowIndex 如果为true，写入完毕后Row index 将会重置为写入之前的未知，如果为false，写入完毕后Row index将会在写完的数据下方
 	 * @return this
 	 */
-	public ExcelWriter writeCol(Object headerVal, int colIndex, Iterable<?> colData, boolean isResetRowIndex){
+	public ExcelWriter writeCol(Object headerVal, int colIndex, Iterable<?> colData, boolean isResetRowIndex) {
 		Assert.isFalse(this.isClosed, "ExcelWriter has been closed!");
 		int currentRowIndex = currentRow.get();
-		if(null != headerVal){
-			writeCellValue(colIndex, currentRowIndex, headerVal,true);
+		if (null != headerVal) {
+			writeCellValue(colIndex, currentRowIndex, headerVal, true);
 			currentRowIndex++;
 		}
 		for (Object colDatum : colData) {
 			writeCellValue(colIndex, currentRowIndex, colDatum);
 			currentRowIndex++;
 		}
-		if(!isResetRowIndex){
+		if (!isResetRowIndex) {
 			currentRow.set(currentRowIndex);
 		}
 		return this;
@@ -1219,10 +1278,10 @@ public class ExcelWriter extends ExcelBase<ExcelWriter> {
 	/**
 	 * 给指定单元格赋值，使用默认单元格样式
 	 *
-	 * @param x            X坐标，从0计数，即列号
-	 * @param y            Y坐标，从0计数，即行号
-	 * @param isHeader     是否为Header
-	 * @param value        值
+	 * @param x        X坐标，从0计数，即列号
+	 * @param y        Y坐标，从0计数，即行号
+	 * @param isHeader 是否为Header
+	 * @param value    值
 	 * @return this
 	 * @since 4.0.2
 	 */

@@ -1,10 +1,10 @@
 package cn.hutool.core.bean;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
- * https://github.com/dromara/hutool/issues/2009
+ * https://github.com/chinabugotech/hutool/issues/2009
  */
 public class Issue2009Test {
 
@@ -71,6 +71,6 @@ public class Issue2009Test {
 		A a = new A();
 		BeanUtil.copyProperties(b, a);
 
-		Assert.assertEquals(b.getPapss(), a.getPapss());
+		assertEquals(b.getPapss(), a.getPapss());
 	}
 }

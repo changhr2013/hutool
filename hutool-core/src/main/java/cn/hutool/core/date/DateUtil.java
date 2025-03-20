@@ -375,7 +375,7 @@ public class DateUtil extends CalendarUtil {
 	}
 
 	/**
-	 * @return 当前月份
+	 * @return 当前月份，从0开始计数
 	 */
 	public static int thisMonth() {
 		return month(date());
@@ -522,7 +522,7 @@ public class DateUtil extends CalendarUtil {
 		if (date instanceof DateTime) {
 			timeZone = ((DateTime) date).getTimeZone();
 		}
-		return format(date, newSimpleFormat(format, null, timeZone));
+		return format(date, FastDateFormat.getInstance(format, timeZone));
 	}
 
 	/**
@@ -817,6 +817,9 @@ public class DateUtil extends CalendarUtil {
 	 * @since 3.1.1
 	 */
 	public static DateTime parseTimeToday(CharSequence timeString) {
+		// issue#I9C2D4 处理时分秒
+		timeString = StrUtil.replaceChars(timeString, "时分秒", ":");
+
 		timeString = StrUtil.format("{} {}", today(), timeString);
 		if (1 == StrUtil.count(timeString, ':')) {
 			// 时间格式为 HH:mm
@@ -841,16 +844,37 @@ public class DateUtil extends CalendarUtil {
 	 * @param utcString UTC时间
 	 * @return 日期对象
 	 * @since 4.1.14
+	 * @deprecated 方法歧义，带T的日期并不一定是UTC时间，请使用 {@link #parseISO8601(String)}
 	 */
+	@Deprecated
 	public static DateTime parseUTC(String utcString) {
-		if (utcString == null) {
+		return parseISO8601(utcString);
+	}
+
+	/**
+	 * 解析ISO8601时间，格式：<br>
+	 * <ol>
+	 * <li>yyyy-MM-dd'T'HH:mm:ss'Z'</li>
+	 * <li>yyyy-MM-dd'T'HH:mm:ss.SSS'Z'</li>
+	 * <li>yyyy-MM-dd'T'HH:mm:ssZ</li>
+	 * <li>yyyy-MM-dd'T'HH:mm:ss.SSSZ</li>
+	 * <li>yyyy-MM-dd'T'HH:mm:ss+0800</li>
+	 * <li>yyyy-MM-dd'T'HH:mm:ss+08:00</li>
+	 * </ol>
+	 *
+	 * @param iso8601String ISO8601时间
+	 * @return 日期对象
+	 * @since 5.8.34
+	 */
+	public static DateTime parseISO8601(String iso8601String) {
+		if (iso8601String == null) {
 			return null;
 		}
-		final int length = utcString.length();
-		if (StrUtil.contains(utcString, 'Z')) {
+		final int length = iso8601String.length();
+		if (StrUtil.contains(iso8601String, 'Z')) {
 			if (length == DatePattern.UTC_PATTERN.length() - 4) {
 				// 格式类似：2018-09-13T05:34:31Z，-4表示减去4个单引号的长度
-				return parse(utcString, DatePattern.UTC_FORMAT);
+				return parse(iso8601String, DatePattern.UTC_FORMAT);
 			}
 
 			final int patternLength = DatePattern.UTC_MS_PATTERN.length();
@@ -858,61 +882,61 @@ public class DateUtil extends CalendarUtil {
 			// -4 ~ -6范围表示匹配毫秒1~3位的情况
 			if (length <= patternLength && length >= patternLength - 6) {
 				// issue#I7H34N，支持最多6位毫秒
-				return parse(utcString, DatePattern.UTC_MS_FORMAT);
+				return parse(iso8601String, DatePattern.UTC_MS_FORMAT);
 			}
-		} else if (StrUtil.contains(utcString, '+')) {
+		} else if (StrUtil.contains(iso8601String, '+')) {
 			// 去除类似2019-06-01T19:45:43 +08:00加号前的空格
-			utcString = utcString.replace(" +", "+");
-			final String zoneOffset = StrUtil.subAfter(utcString, '+', true);
+			iso8601String = iso8601String.replace(" +", "+");
+			final String zoneOffset = StrUtil.subAfter(iso8601String, '+', true);
 			if (StrUtil.isBlank(zoneOffset)) {
-				throw new DateException("Invalid format: [{}]", utcString);
+				throw new DateException("Invalid format: [{}]", iso8601String);
 			}
 			if (false == StrUtil.contains(zoneOffset, ':')) {
 				// +0800转换为+08:00
-				final String pre = StrUtil.subBefore(utcString, '+', true);
-				utcString = pre + "+" + zoneOffset.substring(0, 2) + ":" + "00";
+				final String pre = StrUtil.subBefore(iso8601String, '+', true);
+				iso8601String = pre + "+" + zoneOffset.substring(0, 2) + ":" + "00";
 			}
 
-			if (StrUtil.contains(utcString, CharUtil.DOT)) {
+			if (StrUtil.contains(iso8601String, CharUtil.DOT)) {
 				// 带毫秒，格式类似：2018-09-13T05:34:31.999+08:00
-				utcString = normalizeMillSeconds(utcString, ".", "+");
-				return parse(utcString, DatePattern.UTC_MS_WITH_XXX_OFFSET_FORMAT);
+				iso8601String = normalizeMillSeconds(iso8601String, ".", "+");
+				return parse(iso8601String, DatePattern.UTC_MS_WITH_XXX_OFFSET_FORMAT);
 			} else {
 				// 格式类似：2018-09-13T05:34:31+08:00
-				return parse(utcString, DatePattern.UTC_WITH_XXX_OFFSET_FORMAT);
+				return parse(iso8601String, DatePattern.UTC_WITH_XXX_OFFSET_FORMAT);
 			}
-		} else if(ReUtil.contains("-\\d{2}:?00", utcString)){
+		} else if(ReUtil.contains("-\\d{2}:?00", iso8601String)){
 			// Issue#2612，类似 2022-09-14T23:59:00-08:00 或者 2022-09-14T23:59:00-0800
 
 			// 去除类似2019-06-01T19:45:43 -08:00加号前的空格
-			utcString = utcString.replace(" -", "-");
-			if(':' != utcString.charAt(utcString.length() - 3)){
-				utcString = utcString.substring(0, utcString.length() - 2) + ":00";
+			iso8601String = iso8601String.replace(" -", "-");
+			if(':' != iso8601String.charAt(iso8601String.length() - 3)){
+				iso8601String = iso8601String.substring(0, iso8601String.length() - 2) + ":00";
 			}
 
-			if (StrUtil.contains(utcString, CharUtil.DOT)) {
+			if (StrUtil.contains(iso8601String, CharUtil.DOT)) {
 				// 带毫秒，格式类似：2018-09-13T05:34:31.999-08:00
-				utcString = normalizeMillSeconds(utcString, ".", "-");
-				return new DateTime(utcString, DatePattern.UTC_MS_WITH_XXX_OFFSET_FORMAT);
+				iso8601String = normalizeMillSeconds(iso8601String, ".", "-");
+				return new DateTime(iso8601String, DatePattern.UTC_MS_WITH_XXX_OFFSET_FORMAT);
 			} else {
 				// 格式类似：2018-09-13T05:34:31-08:00
-				return new DateTime(utcString, DatePattern.UTC_WITH_XXX_OFFSET_FORMAT);
+				return new DateTime(iso8601String, DatePattern.UTC_WITH_XXX_OFFSET_FORMAT);
 			}
 		} else {
 			if (length == DatePattern.UTC_SIMPLE_PATTERN.length() - 2) {
 				// 格式类似：2018-09-13T05:34:31
-				return parse(utcString, DatePattern.UTC_SIMPLE_FORMAT);
+				return parse(iso8601String, DatePattern.UTC_SIMPLE_FORMAT);
 			} else if (length == DatePattern.UTC_SIMPLE_PATTERN.length() - 5) {
 				// 格式类似：2018-09-13T05:34
-				return parse(utcString + ":00", DatePattern.UTC_SIMPLE_FORMAT);
-			} else if (StrUtil.contains(utcString, CharUtil.DOT)) {
+				return parse(iso8601String + ":00", DatePattern.UTC_SIMPLE_FORMAT);
+			} else if (StrUtil.contains(iso8601String, CharUtil.DOT)) {
 				// 可能为：  2021-03-17T06:31:33.99
-				utcString = normalizeMillSeconds(utcString, ".", null);
-				return parse(utcString, DatePattern.UTC_SIMPLE_MS_FORMAT);
+				iso8601String = normalizeMillSeconds(iso8601String, ".", null);
+				return parse(iso8601String, DatePattern.UTC_SIMPLE_MS_FORMAT);
 			}
 		}
 		// 没有更多匹配的时间格式
-		throw new DateException("No format fit for date String [{}] !", utcString);
+		throw new DateException("No format fit for date String [{}] !", iso8601String);
 	}
 
 	/**
@@ -924,13 +948,40 @@ public class DateUtil extends CalendarUtil {
 	 * @param cstString UTC时间
 	 * @return 日期对象
 	 * @since 4.6.9
+	 * @deprecated 理解错误，请使用{@link #parseRFC2822(CharSequence)}
 	 */
+	@Deprecated
 	public static DateTime parseCST(CharSequence cstString) {
-		if (cstString == null) {
+		return parseRFC2822(cstString);
+	}
+
+	/**
+	 * 解析RFC2822时间，格式：<br>
+	 * <ol>
+	 * <li>EEE MMM dd HH:mm:ss z yyyy（例如：Wed Aug 01 00:00:00 CST 2012）</li>
+	 * </ol>
+	 *
+	 * @param source RFC2822时间
+	 * @return 日期对象
+	 * @since 4.6.9
+	 */
+	public static DateTime parseRFC2822(CharSequence source) {
+		if (source == null) {
 			return null;
 		}
 
-		return parse(cstString, DatePattern.JDK_DATETIME_FORMAT);
+		// issue#I9C2D4
+		if(StrUtil.contains(source, ',')){
+			if(StrUtil.contains(source, "星期")){
+				return parse(source, FastDateFormat.getInstance(DatePattern.HTTP_DATETIME_PATTERN, Locale.CHINA));
+			}
+			return parse(source, DatePattern.HTTP_DATETIME_FORMAT_Z);
+		}
+
+		if(StrUtil.contains(source, "星期")){
+			return parse(source, FastDateFormat.getInstance(DatePattern.JDK_DATETIME_PATTERN, Locale.CHINA));
+		}
+		return parse(source, DatePattern.JDK_DATETIME_FORMAT);
 	}
 
 	/**
@@ -993,10 +1044,10 @@ public class DateUtil extends CalendarUtil {
 			// Tue Jun 4 16:25:15 +0800 2019
 			// Thu May 16 17:57:18 GMT+08:00 2019
 			// Wed Aug 01 00:00:00 CST 2012
-			return parseCST(dateStr);
+			return parseRFC2822(dateStr);
 		} else if (StrUtil.contains(dateStr, 'T')) {
-			// UTC时间
-			return parseUTC(dateStr);
+			// ISO8601时间
+			return parseISO8601(dateStr);
 		}
 
 		//标准日期格式（包括单个数字的日期时间）
@@ -1376,7 +1427,7 @@ public class DateUtil extends CalendarUtil {
 		return offset(date, DateField.HOUR_OF_DAY, offset);
 	}
 
-	/**w
+	/**
 	 * 偏移天
 	 *
 	 * @param date   日期
@@ -1410,6 +1461,18 @@ public class DateUtil extends CalendarUtil {
 	}
 
 	/**
+	 * 偏移年
+	 *
+	 * @param date   日期
+	 * @param offset 偏移年数，正数向未来偏移，负数向历史偏移
+	 * @return 偏移后的日期
+	 * @since 5.8.29
+	 */
+	public static DateTime offsetYear(final Date date, final int offset) {
+		return offset(date, DateField.YEAR, offset);
+	}
+
+	/**
 	 * 获取指定日期偏移指定时间后的时间，生成的偏移日期不影响原日期
 	 *
 	 * @param date      基准日期
@@ -1418,6 +1481,9 @@ public class DateUtil extends CalendarUtil {
 	 * @return 偏移后的日期
 	 */
 	public static DateTime offset(Date date, DateField dateField, int offset) {
+		if (date == null) {
+			return null;
+		}
 		return dateNew(date).offset(dateField, offset);
 	}
 
@@ -1930,8 +1996,8 @@ public class DateUtil extends CalendarUtil {
 	 * @since 5.7.21
 	 */
 	public static List<DateTime> rangeContains(DateRange start, DateRange end) {
-		List<DateTime> startDateTimes = CollUtil.newArrayList((Iterable<DateTime>) start);
-		List<DateTime> endDateTimes = CollUtil.newArrayList((Iterable<DateTime>) end);
+		List<DateTime> startDateTimes = CollUtil.newArrayList((Iterable<DateTime>) start.reset());
+		List<DateTime> endDateTimes = CollUtil.newArrayList((Iterable<DateTime>) end.reset());
 		return startDateTimes.stream().filter(endDateTimes::contains).collect(Collectors.toList());
 	}
 
@@ -1945,8 +2011,8 @@ public class DateUtil extends CalendarUtil {
 	 * @since 5.7.21
 	 */
 	public static List<DateTime> rangeNotContains(DateRange start, DateRange end) {
-		List<DateTime> startDateTimes = CollUtil.newArrayList((Iterable<DateTime>) start);
-		List<DateTime> endDateTimes = CollUtil.newArrayList((Iterable<DateTime>) end);
+		List<DateTime> startDateTimes = CollUtil.newArrayList((Iterable<DateTime>) start.reset());
+		List<DateTime> endDateTimes = CollUtil.newArrayList((Iterable<DateTime>) end.reset());
 		return endDateTimes.stream().filter(item -> !startDateTimes.contains(item)).collect(Collectors.toList());
 	}
 

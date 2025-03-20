@@ -1,58 +1,24 @@
 package cn.hutool.core.io;
 
 import cn.hutool.core.collection.CollUtil;
-import cn.hutool.core.io.file.FileCopier;
-import cn.hutool.core.io.file.FileMode;
-import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.io.file.FileReader;
-import cn.hutool.core.io.file.FileReader.ReaderHandler;
+import cn.hutool.core.io.file.*;
 import cn.hutool.core.io.file.FileWriter;
-import cn.hutool.core.io.file.LineSeparator;
-import cn.hutool.core.io.file.PathUtil;
-import cn.hutool.core.io.file.Tailer;
+import cn.hutool.core.io.file.FileReader.ReaderHandler;
+import cn.hutool.core.io.resource.Resource;
 import cn.hutool.core.io.resource.ResourceUtil;
 import cn.hutool.core.io.unit.DataSizeUtil;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.thread.ThreadUtil;
-import cn.hutool.core.util.ArrayUtil;
-import cn.hutool.core.util.CharUtil;
-import cn.hutool.core.util.CharsetUtil;
-import cn.hutool.core.util.ClassUtil;
-import cn.hutool.core.util.ReUtil;
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.core.util.URLUtil;
-import cn.hutool.core.util.ZipUtil;
+import cn.hutool.core.util.*;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileFilter;
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.LineNumberReader;
-import java.io.OutputStream;
-import java.io.PrintWriter;
-import java.io.RandomAccessFile;
-import java.io.Reader;
+import java.io.*;
 import java.net.URI;
 import java.net.URL;
 import java.net.URLConnection;
 import java.nio.charset.Charset;
-import java.nio.file.DirectoryNotEmptyException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.nio.file.StandardCopyOption;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.nio.file.*;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.jar.JarFile;
@@ -96,8 +62,12 @@ public class FileUtil extends PathUtil {
 	/**
 	 * 绝对路径判断正则
 	 */
-	private static final Pattern PATTERN_PATH_ABSOLUTE = Pattern.compile("^[a-zA-Z]:([/\\\\].*)?");
+	private static final Pattern PATTERN_PATH_ABSOLUTE = Pattern.compile("^[a-zA-Z]:([/\\\\].*)?", Pattern.DOTALL);
 
+	/**
+	 * windows的共享文件夹开头
+	 */
+	private static final String SMB_PATH_PREFIX = "\\\\";
 
 	/**
 	 * 是否为Windows环境
@@ -579,24 +549,99 @@ public class FileUtil extends PathUtil {
 
 	/**
 	 * 计算文件的总行数<br>
-	 * 读取文件采用系统默认编码，一般乱码不会造成行数错误。
+	 * 参考：https://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
 	 *
 	 * @param file 文件
 	 * @return 该文件总行数
 	 * @since 5.7.22
 	 */
 	public static int getTotalLines(File file) {
+		return getTotalLines(file, 1024);
+	}
+
+	/**
+	 * 计算文件的总行数<br>
+	 * 参考：https://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java<br>
+	 * 最后一行如果末尾带有换行符，则被当作为新行
+	 *
+	 * @param file       文件
+	 * @param bufferSize 缓存大小，小于1则使用默认的1024
+	 * @return 该文件总行数
+	 * @since 5.8.28
+	 */
+	public static int getTotalLines(File file, int bufferSize) {
+		return getTotalLines(file, bufferSize, true);
+	}
+
+	/**
+	 * 计算文件的总行数<br>
+	 * 参考：https://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
+	 *
+	 * @param file       文件
+	 * @param bufferSize 缓存大小，小于1则使用默认的1024
+	 * @param lastLineSeparatorAsNewLine 是否将最后一行分隔符作为新行，Linux下要求最后一行必须带有换行符，不算一行，此处用户选择
+	 * @return 该文件总行数
+	 * @since 5.8.37
+	 */
+	public static int getTotalLines(File file, int bufferSize, boolean lastLineSeparatorAsNewLine) {
 		if (false == isFile(file)) {
 			throw new IORuntimeException("Input must be a File");
 		}
-		try (final LineNumberReader lineNumberReader = new LineNumberReader(new java.io.FileReader(file))) {
-			// 设置起始为1
-			lineNumberReader.setLineNumber(1);
-			// 跳过文件中内容
-			//noinspection ResultOfMethodCallIgnored
-			lineNumberReader.skip(Long.MAX_VALUE);
-			// 获取当前行号
-			return lineNumberReader.getLineNumber();
+		if (bufferSize < 1) {
+			bufferSize = 1024;
+		}
+		try (InputStream is = getInputStream(file)) {
+			byte[] chars = new byte[bufferSize];
+			int readChars = is.read(chars);
+			if (readChars == -1) {
+				// 空文件，返回0
+				return 0;
+			}
+
+			// 起始行为1
+			// 如果只有一行，无换行符，则读取结束后返回1
+			// 如果多行，最后一行无换行符，最后一行需要单独计数
+			// 如果多行，最后一行有换行符，则空行算作一行
+			int count = 1;
+			byte pre;
+			byte c = 0;
+			while (readChars == bufferSize) {
+				for (int i = 0; i < bufferSize; i++) {
+					pre = c;
+					c = chars[i];
+					// 换行符兼容MAC
+					if (c == CharUtil.LF || pre == CharUtil.CR) {
+						++count;
+					}
+				}
+				readChars = is.read(chars);
+			}
+
+			// count remaining characters
+			while (readChars != -1) {
+				for (int i = 0; i < readChars; i++) {
+					pre = c;
+					c = chars[i];
+					if (c == CharUtil.LF || pre == CharUtil.CR) {
+						++count;
+					}
+				}
+				readChars = is.read(chars);
+			}
+
+			if(lastLineSeparatorAsNewLine){
+				// 最后一个字符为\r，则单独计数行
+				if(c == CharUtil.CR){
+					++count;
+				}
+			}else{
+				// 最后一个字符为\n，则可选是否算作新行单独计数行
+				if(c == CharUtil.LF){
+					--count;
+				}
+			}
+
+			return count;
 		} catch (IOException e) {
 			throw new IORuntimeException(e);
 		}
@@ -833,7 +878,7 @@ public class FileUtil extends PathUtil {
 			return true;
 		}
 
-		final File[] files = directory.listFiles();
+		File[] files = directory.listFiles();
 		if (ArrayUtil.isEmpty(files)) {
 			// 空文件夹则删除之
 			return directory.delete();
@@ -841,6 +886,12 @@ public class FileUtil extends PathUtil {
 
 		for (File childFile : files) {
 			cleanEmpty(childFile);
+		}
+
+		// 当前目录清除完毕，需要再次判断当前文件夹，空文件夹则删除之
+		String[] fileNames = directory.list();
+		if (ArrayUtil.isEmpty(fileNames)) {
+			return directory.delete();
 		}
 		return true;
 	}
@@ -1004,7 +1055,7 @@ public class FileUtil extends PathUtil {
 		int exceptionsCount = 0;
 		while (true) {
 			try {
-				// https://github.com/dromara/hutool/issues/3103
+				// https://github.com/chinabugotech/hutool/issues/3103
 				//File file = File.createTempFile(prefix, suffix, mkdir(dir)).getCanonicalFile();
 				final File file = PathUtil.createTempFile(prefix, suffix, null == dir ? null : dir.toPath()).toFile().getCanonicalFile();
 				if (isReCreat) {
@@ -1035,6 +1086,40 @@ public class FileUtil extends PathUtil {
 		Assert.notBlank(src, "Source File path is blank !");
 		Assert.notBlank(dest, "Destination File path is blank !");
 		return copyFile(Paths.get(src), Paths.get(dest), options).toFile();
+	}
+
+	/**
+	 * 通过JDK7+的 Files#copy(InputStream, Path, CopyOption...) 方法拷贝文件
+	 *
+	 * @param src     源文件
+	 * @param dest    目标文件或目录，如果为目录使用与源文件相同的文件名
+	 * @param options {@link StandardCopyOption}
+	 * @return 目标文件
+	 * @throws IORuntimeException IO异常
+	 * @since 5.8.27
+	 */
+	public static File copyFile(Resource src, File dest, StandardCopyOption... options) throws IORuntimeException {
+		// check
+		Assert.notNull(src, "Source File is null !");
+		Assert.notNull(dest, "Destination File or directiory is null !");
+		return copyFile(src, dest.toPath(), options).toFile();
+	}
+
+	/**
+	 * 通过JDK7+的 Files#copy(InputStream, Path, CopyOption...) 方法拷贝文件
+	 *
+	 * @param src     源文件流，使用后不关闭
+	 * @param dest    目标文件，不存在自动创建
+	 * @param options {@link StandardCopyOption}
+	 * @return 目标文件
+	 * @throws IORuntimeException IO异常
+	 * @since 5.8.27
+	 */
+	public static File copyFile(InputStream src, File dest, StandardCopyOption... options) throws IORuntimeException {
+		// check
+		Assert.notNull(src, "Source File is null !");
+		Assert.notNull(dest, "Destination File or directiory is null !");
+		return copyFile(src, dest.toPath(), options).toFile();
 	}
 
 	/**
@@ -1266,11 +1351,11 @@ public class FileUtil extends PathUtil {
 		if (null == classPath) {
 			// throw new NullPointerException("ClassPath is null !");
 			// 在jar运行模式中，ClassPath有可能获取不到，此时返回原始相对路径（此时获取的文件为相对工作目录）
-			return path;
+			return normalPath;
 		}
 
 		// 资源不存在的情况下使用标准化路径有问题，使用原始路径拼接后标准化路径
-		return normalize(classPath.concat(Objects.requireNonNull(path)));
+		return normalize(classPath.concat(Objects.requireNonNull(normalPath)));
 	}
 
 	/**
@@ -1311,6 +1396,7 @@ public class FileUtil extends PathUtil {
 	 *     <li>以/开头的路径</li>
 	 *     <li>满足类似于 c:/xxxxx，其中祖母随意，不区分大小写</li>
 	 *     <li>满足类似于 d:\xxxxx，其中祖母随意，不区分大小写</li>
+	 *     <li>满足windows SMB协议格式，如: \\192.168.254.1\Share</li>
 	 * </ul>
 	 *
 	 * @param path 需要检查的Path
@@ -1322,7 +1408,7 @@ public class FileUtil extends PathUtil {
 		}
 
 		// 给定的路径已经是绝对路径了
-		return StrUtil.C_SLASH == path.charAt(0) || ReUtil.isMatch(PATTERN_PATH_ABSOLUTE, path);
+		return StrUtil.C_SLASH == path.charAt(0) || path.startsWith(SMB_PATH_PREFIX) || ReUtil.isMatch(PATTERN_PATH_ABSOLUTE, path);
 	}
 
 	/**
@@ -1380,8 +1466,8 @@ public class FileUtil extends PathUtil {
 		if (false == file1.exists() || false == file2.exists()) {
 			// 两个文件都不存在判断其路径是否相同， 对于一个存在一个不存在的情况，一定不相同
 			return false == file1.exists()//
-					&& false == file2.exists()//
-					&& pathEquals(file1, file2);
+				&& false == file2.exists()//
+				&& pathEquals(file1, file2);
 		}
 		return equals(file1.toPath(), file2.toPath());
 	}
@@ -1608,7 +1694,7 @@ public class FileUtil extends PathUtil {
 		}
 
 		//兼容Windows下的共享目录路径（原始路径如果以\\开头，则保留这种路径）
-		if (path.startsWith("\\\\")) {
+		if (path.startsWith(SMB_PATH_PREFIX)) {
 			return path;
 		}
 
@@ -1626,6 +1712,8 @@ public class FileUtil extends PathUtil {
 		pathToUse = pathToUse.replaceAll("[/\\\\]+", StrUtil.SLASH);
 		// 去除开头空白符，末尾空白符合法，不去除
 		pathToUse = StrUtil.trimStart(pathToUse);
+		// issue#IAB65V 去除尾部的换行符
+		pathToUse = StrUtil.trim(pathToUse, 1, (c)->c == '\n' || c == '\r');
 
 		String prefix = StrUtil.EMPTY;
 		int prefixIndex = pathToUse.indexOf(StrUtil.COLON);
@@ -3475,7 +3563,7 @@ public class FileUtil extends PathUtil {
 	 * @since 4.1.15
 	 */
 	public static String getMimeType(String filePath) {
-		if(StrUtil.isBlank(filePath)){
+		if (StrUtil.isBlank(filePath)) {
 			return null;
 		}
 
@@ -3602,8 +3690,8 @@ public class FileUtil extends PathUtil {
 		// 替换Windows路径分隔符为Linux路径分隔符，便于统一处理
 		fileName = fileName.replace('\\', '/');
 		if (false == isWindows()
-				// 检查文件名中是否包含"/"，不考虑以"/"结尾的情况
-				&& fileName.lastIndexOf(CharUtil.SLASH, fileName.length() - 2) > 0) {
+			// 检查文件名中是否包含"/"，不考虑以"/"结尾的情况
+			&& fileName.lastIndexOf(CharUtil.SLASH, fileName.length() - 2) > 0) {
 			// 在Linux下多层目录创建存在问题，/会被当成文件名的一部分，此处做处理
 			// 使用/拆分路径（zip中无\），级联创建父目录
 			final List<String> pathParts = StrUtil.split(fileName, '/', false, true);

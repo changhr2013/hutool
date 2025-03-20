@@ -1,5 +1,7 @@
 package cn.hutool.captcha;
 
+import cn.hutool.captcha.generator.CodeGenerator;
+import cn.hutool.captcha.generator.RandomGenerator;
 import cn.hutool.core.img.GraphicsUtil;
 import cn.hutool.core.img.ImgUtil;
 import cn.hutool.core.util.ObjectUtil;
@@ -51,21 +53,51 @@ public class ShearCaptcha extends AbstractCaptcha {
 	 * @param thickness 干扰线宽度
 	 */
 	public ShearCaptcha(int width, int height, int codeCount, int thickness) {
-		super(width, height, codeCount, thickness);
+		this(width, height, new RandomGenerator(codeCount), thickness);
+	}
+
+	/**
+	 * 构造
+	 *
+	 * @param width          图片宽
+	 * @param height         图片高
+	 * @param generator      验证码生成器
+	 * @param interfereCount 验证码干扰元素个数
+	 */
+	public ShearCaptcha(int width, int height, CodeGenerator generator, int interfereCount) {
+		super(width, height, generator, interfereCount);
+	}
+
+
+	/**
+	 * 构造
+	 *
+	 * @param width          图片宽
+	 * @param height         图片高
+	 * @param codeCount 	 字符个数
+	 * @param interfereCount 验证码干扰元素个数
+	 * @param size           字体的大小 高度的倍数
+	 */
+	public ShearCaptcha(int width, int height, int codeCount, int interfereCount, float size) {
+		super(width, height, new RandomGenerator(codeCount), interfereCount, size);
 	}
 
 	@Override
 	public Image createImage(String code) {
-		final BufferedImage image = new BufferedImage(this.width, this.height, BufferedImage.TYPE_INT_RGB);
-		final Graphics2D g = GraphicsUtil.createGraphics(image, ObjectUtil.defaultIfNull(this.background, Color.WHITE));
+		final BufferedImage image = new BufferedImage(width, height, (null == this.background) ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_INT_RGB);
+		final Graphics2D g = ImgUtil.createGraphics(image, this.background);
 
-		// 画字符串
-		drawString(g, code);
+		try{
+			// 画字符串
+			drawString(g, code);
 
-		// 扭曲
-		shear(g, this.width, this.height, ObjectUtil.defaultIfNull(this.background, Color.WHITE));
-		// 画干扰线
-		drawInterfere(g, 0, RandomUtil.randomInt(this.height) + 1, this.width, RandomUtil.randomInt(this.height) + 1, this.interfereCount, ImgUtil.randomColor());
+			// 扭曲
+			shear(g, this.width, this.height, ObjectUtil.defaultIfNull(this.background, Color.WHITE));
+			// 画干扰线
+			drawInterfere(g, 0, RandomUtil.randomInt(this.height) + 1, this.width, RandomUtil.randomInt(this.height) + 1, this.interfereCount, ImgUtil.randomColor());
+		} finally {
+			g.dispose();
+		}
 
 		return image;
 	}

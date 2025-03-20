@@ -1,6 +1,8 @@
 package cn.hutool.db.ds.pooled;
 
 import cn.hutool.core.map.MapUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.db.DbRuntimeException;
 import cn.hutool.db.DbUtil;
 import cn.hutool.setting.dialect.Props;
 
@@ -15,7 +17,7 @@ import java.util.Properties;
  *
  */
 public class PooledConnection extends ConnectionWraper{
-	
+
 	private final PooledDataSource ds;
 	private boolean isClosed;
 
@@ -28,6 +30,16 @@ public class PooledConnection extends ConnectionWraper{
 	public PooledConnection(PooledDataSource ds) throws SQLException {
 		this.ds = ds;
 		final DbConfig config = ds.getConfig();
+
+		// issue#IA6EUQ 部分驱动无法自动加载，此处手动完成
+		final String driver = config.getDriver();
+		if(StrUtil.isNotBlank(driver)){
+			try {
+				Class.forName(driver);
+			} catch (ClassNotFoundException e) {
+				throw new DbRuntimeException(e);
+			}
+		}
 
 		final Props info = new Props();
 		final String user = config.getUser();
@@ -47,7 +59,7 @@ public class PooledConnection extends ConnectionWraper{
 
 		this.raw = DriverManager.getConnection(config.getUrl(), info);
 	}
-	
+
 	public PooledConnection(PooledDataSource ds, Connection conn) {
 		this.ds = ds;
 		this.raw = conn;
@@ -71,7 +83,7 @@ public class PooledConnection extends ConnectionWraper{
 	public boolean isClosed() throws SQLException {
 		return isClosed || raw.isClosed();
 	}
-	
+
 	/**
 	 * 打开连接
 	 * @return this

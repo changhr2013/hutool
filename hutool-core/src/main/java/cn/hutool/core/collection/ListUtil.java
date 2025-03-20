@@ -2,22 +2,14 @@ package cn.hutool.core.collection;
 
 import cn.hutool.core.comparator.PinyinComparator;
 import cn.hutool.core.comparator.PropertyComparator;
+import cn.hutool.core.exceptions.ValidateException;
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.lang.Matcher;
-import cn.hutool.core.lang.Validator;
 import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.PageUtil;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.RandomAccess;
+import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Consumer;
 
@@ -416,24 +408,45 @@ public class ListUtil {
 	}
 
 	/**
-	 * 在指定位置设置元素。当index小于List的长度时，替换指定位置的值，否则追加{@code paddingElement}直到到达index后，设置值
+	 * 在指定位置设置元素。当index小于List的长度时，替换指定位置的值，否则追加{@code paddingElement}直到到达index后，设置值<br>
+	 * 注意：为避免OOM问题，此方法限制index的最大值为{@code (list.size() + 1) * 10}
 	 *
-	 * @param <T>     元素类型
-	 * @param list    List列表
-	 * @param index   位置
-	 * @param element 新元素
+	 * @param <T>            元素类型
+	 * @param list           List列表
+	 * @param index          位置
+	 * @param element        新元素
 	 * @param paddingElement 填充的值
 	 * @return 原List
-	 * @since 5。8.4
+	 * @since 5.8.4
 	 */
 	public static <T> List<T> setOrPadding(List<T> list, int index, T element, T paddingElement) {
+		return setOrPadding(list, index, element, paddingElement, (list.size() + 1) * 10);
+	}
+
+	/**
+	 * 在指定位置设置元素。当index小于List的长度时，替换指定位置的值，否则追加{@code paddingElement}直到到达index后，设置值
+	 *
+	 * @param <T>            元素类型
+	 * @param list           List列表
+	 * @param index          位置
+	 * @param element        新元素
+	 * @param paddingElement 填充的值
+	 * @param indexLimit     最大索引限制
+	 * @return 原List
+	 * @since 5.8.28
+	 */
+	public static <T> List<T> setOrPadding(List<T> list, int index, T element, T paddingElement, int indexLimit) {
 		Assert.notNull(list, "List must be not null !");
 		final int size = list.size();
 		if (index < size) {
 			list.set(index, element);
 		} else {
-			// issue#3286, 增加安全检查，最多增加10倍
-			Validator.checkIndexLimit(index, list.size());
+			if (indexLimit > 0) {
+				// issue#3286, 增加安全检查
+				if (index > indexLimit) {
+					throw new ValidateException("Index [{}] is too large for limit: [{}]", index, indexLimit);
+				}
+			}
 			for (int i = size; i < index; i++) {
 				list.add(paddingElement);
 			}
@@ -595,8 +608,8 @@ public class ListUtil {
 		}
 
 		return (list instanceof RandomAccess)
-				? new RandomAccessPartition<>(list, size)
-				: new Partition<>(list, size);
+			? new RandomAccessPartition<>(list, size)
+			: new Partition<>(list, size);
 	}
 
 	/**
@@ -641,8 +654,8 @@ public class ListUtil {
 		}
 
 		return (list instanceof RandomAccess)
-				? new RandomAccessAvgPartition<>(list, limit)
-				: new AvgPartition<>(list, limit);
+			? new RandomAccessAvgPartition<>(list, limit)
+			: new AvgPartition<>(list, limit);
 	}
 
 	/**
@@ -682,5 +695,30 @@ public class ListUtil {
 				swapTo(list, element, targetIndex);
 			}
 		}
+	}
+
+	/**
+	 * 将元素移动到指定列表的新位置。
+	 * <ul>
+	 *     <li>如果元素不在列表中，则将其添加到新位置。</li>
+	 *     <li>如果元素已在列表中，则先移除它，然后再将其添加到新位置。</li>
+	 * </ul>
+	 *
+	 * @param list        原始列表，元素将在这个列表上进行操作。
+	 * @param element     需要移动的元素。
+	 * @param newPosition 元素的新位置，从0开始计数，位置计算是以移除元素后的列表位置计算的
+	 * @param <T>         列表和元素的通用类型。
+	 * @return 更新后的列表。
+	 * @since 5.8.29
+	 */
+	public static <T> List<T> move(List<T> list, T element, int newPosition) {
+		Assert.notNull(list);
+		if (false == list.contains(element)) {
+			list.add(newPosition, element);
+		} else {
+			list.remove(element);
+			list.add(newPosition, element);
+		}
+		return list;
 	}
 }

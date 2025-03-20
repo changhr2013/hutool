@@ -24,6 +24,7 @@ public class HtmlUtil {
 	public static final String GT = StrUtil.HTML_GT;
 
 	public static final String RE_HTML_MARK = "(<[^<]*?>)|(<[\\s]*?/[^<]*?>)|(<[^<]*?/[\\s]*?>)";
+	public static final String RE_HTML_EMPTY_MARK = "<(\\w+)([^>]*)>\\s*</\\1>";
 	public static final String RE_SCRIPT = "<[\\s]*?script[^>]*?>.*?<[\\s]*?\\/[\\s]*?script[\\s]*?>";
 
 	private static final char[][] TEXT = new char[256][];
@@ -84,6 +85,17 @@ public class HtmlUtil {
 	 */
 	public static String cleanHtmlTag(String content) {
 		return content.replaceAll(RE_HTML_MARK, "");
+	}
+
+	/**
+	 * 清除所有HTML空标签<br>
+	 * 例如：&lt;p&gt;&lt;/p&gt;
+	 *
+	 * @param content 文本
+	 * @return 清除空标签后的文本
+	 */
+	public static String cleanEmptyTag(String content) {
+		return content.replaceAll(RE_HTML_EMPTY_MARK, "");
 	}
 
 	/**
@@ -149,7 +161,7 @@ public class HtmlUtil {
 	 */
 	public static String removeHtmlAttr(String content, String... attrs) {
 		String regex;
-		for (String attr : attrs) {
+		for (final String attr : attrs) {
 			// (?i)     表示忽略大小写
 			// \s*      属性名前后的空白符去除
 			// [^>]+?   属性值，至少有一个非>的字符，>表示标签结束
@@ -158,14 +170,16 @@ public class HtmlUtil {
 			regex = StrUtil.format("(?i)(\\s*{}\\s*=\\s*)" +
 				"(" +
 				// name="xxxx"
-				"([\"][^\"]+?[\"]\\s*)|" +
-				// name=xxx >
-				"([^>]+?\\s+(?=>))|" +
-				// name=xxx> 或者 name=xxx name2=xxx
-				"([^>]+?(?=\\s|>))" +
+				"([\"][^\"]+?[\"])|" +
+				// name=xxx > 或者 name=xxx> 或者 name=xxx name2=xxx
+				"([^>]+?\\s*(?=\\s|>))" +
 				")", attr);
 			content = content.replaceAll(regex, StrUtil.EMPTY);
 		}
+
+		// issue#I8YV0K 去除尾部空格
+		content = ReUtil.replaceAll(content, "\\s+(>|/>)", "$1");
+
 		return content;
 	}
 

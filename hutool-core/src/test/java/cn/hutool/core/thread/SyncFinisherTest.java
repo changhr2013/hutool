@@ -14,14 +14,14 @@ package cn.hutool.core.thread;
 
 import cn.hutool.core.io.IoUtil;
 import cn.hutool.core.lang.Console;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.atomic.AtomicBoolean;
 
 public class SyncFinisherTest {
 	/**
-	 * https://gitee.com/dromara/hutool/issues/I716SX
+	 * https://gitee.com/chinabugotech/hutool/issues/I716SX
 	 * 设置ExceptionHandler捕获异常
 	 */
 	@Test
@@ -34,17 +34,17 @@ public class SyncFinisherTest {
 
 		syncFinisher.setExceptionHandler((t, e) -> {
 			hasException.set(true);
-			Assert.assertEquals("For input string: \"XYZ\"", e.getMessage());
+			assertEquals("For input string: \"XYZ\"", e.getMessage());
 		});
 
 		syncFinisher.start();
 		IoUtil.close(syncFinisher);
 		ThreadUtil.sleep(300);
-		Assert.assertTrue(hasException.get());
+		assertTrue(hasException.get());
 	}
 
 	/**
-	 * https://gitee.com/dromara/hutool/issues/I716SX
+	 * https://gitee.com/chinabugotech/hutool/issues/I716SX
 	 * 默认情况下吞掉异常
 	 */
 	@Test

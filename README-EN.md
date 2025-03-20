@@ -18,39 +18,38 @@
 	<a target="_blank" href="https://www.oracle.com/java/technologies/javase/javase-jdk8-downloads.html">
 		<img src="https://img.shields.io/badge/JDK-8+-green.svg" />
 	</a>
-	<a target="_blank" href="https://travis-ci.com/dromara/hutool">
-		<img src="https://travis-ci.com/dromara/hutool.svg?branch=v5-master" />
+	<a target="_blank" href="https://travis-ci.com/chinabugotech/hutool">
+		<img src="https://travis-ci.com/chinabugotech/hutool.svg?branch=v5-master" />
 	</a>
-	<a href="https://www.codacy.com/gh/dromara/hutool/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=dromara/hutool&amp;utm_campaign=Badge_Grade">
+	<a href="https://www.codacy.com/gh/chinabugotech/hutool/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=chinabugotech/hutool&amp;utm_campaign=Badge_Grade">
 		<img src="https://app.codacy.com/project/badge/Grade/8a6897d9de7440dd9de8804c28d2871d"/>
 	</a>
-	<a href="https://codecov.io/gh/dromara/hutool">
-		<img src="https://codecov.io/gh/dromara/hutool/branch/v5-master/graph/badge.svg" />
+	<a href="https://codecov.io/gh/chinabugotech/hutool">
+		<img src="https://codecov.io/gh/chinabugotech/hutool/branch/v5-master/graph/badge.svg" />
 	</a>
 	<a target="_blank" href="https://gitter.im/hutool/Lobby?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge">
 		<img src="https://badges.gitter.im/hutool/Lobby.svg" />
 	</a>
-	<a target="_blank" href='https://gitee.com/dromara/hutool/stargazers'>
-		<img src='https://gitee.com/dromara/hutool/badge/star.svg?theme=gvp' alt='star'/>
+	<a target="_blank" href='https://gitee.com/chinabugotech/hutool/stargazers'>
+		<img src='https://gitee.com/chinabugotech/hutool/badge/star.svg?theme=gvp' alt='star'/>
 	</a>
-	<a target="_blank" href='https://github.com/dromara/hutool'>
-		<img src="https://img.shields.io/github/stars/dromara/hutool.svg?style=social" alt="github star"/>
+	<a target="_blank" href='https://github.com/chinabugotech/hutool'>
+		<img src="https://img.shields.io/github/stars/chinabugotech/hutool.svg?style=social" alt="github star"/>
+	</a>
+	<a target="_blank" href='https://gitcode.com/chinabugotech/hutool'>
+		<img src="https://gitcode.com/chinabugotech/hutool/star/badge.svg" alt="gitcode star"/>
 	</a>
 </p>
 
 <br/>
 <p align="center">
-	<a href="https://qm.qq.com/cgi-bin/qm/qr?k=QtsqXLkHpLjE99tkre19j6pjPMhSay1a&jump_from=webapi">
+	<a href="https://qm.qq.com/q/I7pPlTzCa4">
 	<img src="https://img.shields.io/badge/QQ%E7%BE%A4%E2%91%A6-715292493-orange"/></a>
 </p>
 
 -------------------------------------------------------------------------------
 
-<p align="center">
-	<a href="#"><img style="width: 45%" alt="" src="https://plus.hutool.cn/images/zanzhu.jpg"/></a>
-</p>
 
--------------------------------------------------------------------------------
 
 [**🌎中文说明**](README.md)
 
@@ -119,29 +118,13 @@ Each module can be introduced individually, or all modules can be introduced by 
 
 [📘Chinese back-up documentation](https://plus.hutool.cn/)
 
-[📙API](https://apidoc.gitee.com/dromara/hutool/)
+[📙API](https://plus.hutool.cn/apidocs/)
 
 [🎬Video](https://www.bilibili.com/video/BV1bQ4y1M7d9?p=2)
 
 -------------------------------------------------------------------------------
 
-## 🪙Support Hutool
 
-### 💳Donate
-
-If you think Hutool is good, you can donate to buy the author a pack of chili~, thanks in advance ^_^.
-
-[Gitee donate](https://gitee.com/dromara/hutool)
-
-[Dromara donate](https://dromara.gitee.io/donate.html)
-
-### 👕Shop about Hutool
-
-We provide the T-Shirt and Sweater with Hutool Logo, please visit the shop：
-
-👉 [Hutool Shop](https://market.m.taobao.com/apps/market/content/index.html?wh_weex=true&contentId=331724720170) 👈
-
--------------------------------------------------------------------------------
 
 ## 📦Install
 
@@ -150,18 +133,18 @@ We provide the T-Shirt and Sweater with Hutool Logo, please visit the shop：
 <dependency>
     <groupId>cn.hutool</groupId>
     <artifactId>hutool-all</artifactId>
-    <version>5.8.25</version>
+    <version>5.8.37</version>
 </dependency>
 ```
 
 ### 🍐Gradle
 ```
-implementation 'cn.hutool:hutool-all:5.8.25'
+implementation 'cn.hutool:hutool-all:5.8.37'
 ```
 
 ## 📥Download
 
-- [Maven Repo](https://repo1.maven.org/maven2/cn/hutool/hutool-all/5.8.25/)
+- [Maven Repo](https://repo1.maven.org/maven2/cn/hutool/hutool-all/5.8.37/)
 
 > 🔔️note:
 > Hutool 5.x supports JDK8+ and is not tested on Android platforms, and cannot guarantee that all tool classes or tool methods are available.
@@ -171,9 +154,9 @@ implementation 'cn.hutool:hutool-all:5.8.25'
 
 Download the entire project source code
 
-gitee：[https://gitee.com/dromara/hutool](https://gitee.com/dromara/hutool) 
+gitee：[https://gitee.com/chinabugotech/hutool](https://gitee.com/chinabugotech/hutool) 
 
-github:[https://github.com/dromara/hutool](https://github.com/dromara/hutool)
+github:[https://github.com/chinabugotech/hutool](https://github.com/chinabugotech/hutool)
 
 ```sh
 cd ${hutool}
@@ -197,8 +180,9 @@ Hutool's source code is divided into two branches:
 
 When submitting feedback, please indicate which JDK version, Hutool version, and related dependency library version you are using.
 
-- [Gitee issue](https://gitee.com/dromara/hutool/issues)
-- [Github issue](https://github.com/dromara/hutool/issues)
+- [Gitee issue](https://gitee.com/chinabugotech/hutool/issues)
+- [Github issue](https://github.com/chinabugotech/hutool/issues)
+- [Gitcode issue](https://gitcode.com/chinabugotech/hutool/issues)
 
 ### 🧬Principles of PR(pull request)
 
@@ -217,4 +201,4 @@ Hutool welcomes anyone to contribute code to Hutool, but the author suffers from
 
 ## ⭐Star Hutool
 
-[![Stargazers over time](https://starchart.cc/dromara/hutool.svg)](https://starchart.cc/dromara/hutool)
+[![Stargazers over time](https://starchart.cc/chinabugotech/hutool.svg)](https://starchart.cc/chinabugotech/hutool)

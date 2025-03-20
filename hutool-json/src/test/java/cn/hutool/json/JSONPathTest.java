@@ -1,7 +1,11 @@
 package cn.hutool.json;
 
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+
+import cn.hutool.core.lang.TypeReference;
+import org.junit.jupiter.api.Test;
+
+import java.util.List;
 
 /**
  * JSON路径单元测试
@@ -15,9 +19,9 @@ public class JSONPathTest {
 	public void getByPathTest() {
 		String json = "[{\"id\":\"1\",\"name\":\"xingming\"},{\"id\":\"2\",\"name\":\"mingzi\"}]";
 		Object value = JSONUtil.parseArray(json).getByPath("[0].name");
-		Assert.assertEquals("xingming", value);
+		assertEquals("xingming", value);
 		value = JSONUtil.parseArray(json).getByPath("[1].name");
-		Assert.assertEquals("mingzi", value);
+		assertEquals("mingzi", value);
 	}
 
 	@Test
@@ -25,6 +29,25 @@ public class JSONPathTest {
 		String str = "{'accountId':111}";
 		JSON json = JSONUtil.parse(str);
 		Long accountId = JSONUtil.getByPath(json, "$.accountId", 0L);
-		Assert.assertEquals(111L, accountId.longValue());
+		assertEquals(111L, accountId.longValue());
+	}
+
+	@Test
+	public void getByPathTest3(){
+		String str = "[{'accountId':1},{'accountId':2},{'accountId':3}]";
+		JSON json = JSONUtil.parse(str);
+		// 返回指定泛型的对象 List<Long>
+		List<Long> accountIds = json.getByPath("$.accountId", new TypeReference<List<Long>>() {
+		});
+		assertNotNull(accountIds);
+		assertArrayEquals(new Long[]{1L, 2L, 3L}, accountIds.toArray());
+
+		str = "{\"accountInfos\": [{\"accountId\":1},{\"accountId\":2},{\"accountId\":3}]}";
+		json = JSONUtil.parse(str);
+		// 返回指定泛型的对象 List<Long>
+		accountIds = json.getByPath("$.accountInfos.accountId", new TypeReference<List<Long>>() {
+		});
+		assertNotNull(accountIds);
+		assertArrayEquals(new Long[]{1L, 2L, 3L}, accountIds.toArray());
 	}
 }

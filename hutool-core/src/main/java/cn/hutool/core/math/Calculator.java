@@ -1,5 +1,6 @@
 package cn.hutool.core.math;
 
+import cn.hutool.core.util.CharUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 
@@ -9,7 +10,7 @@ import java.util.Stack;
 
 /**
  * 数学表达式计算工具类<br>
- * 见：https://github.com/dromara/hutool/issues/1090#issuecomment-693750140
+ * 见：https://github.com/chinabugotech/hutool/issues/1090#issuecomment-693750140
  *
  * @author trainliang, looly
  * @since 5.4.3
@@ -192,6 +193,9 @@ public class Calculator {
 						arr[i] = '~';
 					}
 				}
+			} else if(CharUtil.equals(arr[i], 'x', true)){
+				// issue#3787 x转换为*
+				arr[i] = '*';
 			}
 		}
 		if (arr[0] == '~' && (arr.length > 1 && arr[1] == '(')) {

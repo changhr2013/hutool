@@ -3,8 +3,8 @@ package cn.hutool.core.bean;
 import cn.hutool.core.bean.copier.CopyOptions;
 import cn.hutool.core.text.NamingCase;
 import lombok.Data;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +12,7 @@ import java.util.Map;
 public class Issue2202Test {
 
 	/**
-	 * https://github.com/dromara/hutool/issues/2202
+	 * https://github.com/chinabugotech/hutool/issues/2202
 	 */
 	@Test
 	public void mapToBeanWithFieldNameEditorTest(){
@@ -24,10 +24,10 @@ public class Issue2202Test {
 		ResponseSignVerifyParams case1 = BeanUtil.toBean(headerMap, ResponseSignVerifyParams.class,
 				CopyOptions.create().setFieldNameEditor(field -> NamingCase.toCamelCase(field, '-')));
 
-		Assert.assertEquals("serial", case1.getWechatpaySerial());
-		Assert.assertEquals("nonce", case1.getWechatpayNonce());
-		Assert.assertEquals("timestamp", case1.getWechatpayTimestamp());
-		Assert.assertEquals("signature", case1.getWechatpaySignature());
+		assertEquals("serial", case1.getWechatpaySerial());
+		assertEquals("nonce", case1.getWechatpayNonce());
+		assertEquals("timestamp", case1.getWechatpayTimestamp());
+		assertEquals("signature", case1.getWechatpaySignature());
 	}
 
 	@Data

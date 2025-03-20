@@ -1,11 +1,14 @@
 package cn.hutool.core.lang.tree;
 
 import cn.hutool.core.collection.CollUtil;
-import org.junit.Assert;
-import org.junit.Test;
+import lombok.Data;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /**
  * 通用树测试
@@ -32,15 +35,15 @@ public class TreeTest {
 	public void sampleTreeTest() {
 		List<Tree<String>> treeList = TreeUtil.build(nodeList, "0");
 		for (Tree<String> tree : treeList) {
-			Assert.assertNotNull(tree);
-			Assert.assertEquals("0", tree.getParentId());
+			assertNotNull(tree);
+			assertEquals("0", tree.getParentId());
 //			Console.log(tree);
 		}
 
 		// 测试通过子节点查找父节点
 		final Tree<String> rootNode0 = treeList.get(0);
 		final Tree<String> parent = rootNode0.getChildren().get(0).getParent();
-		Assert.assertEquals(rootNode0, parent);
+		assertEquals(rootNode0, parent);
 	}
 
 	@Test
@@ -55,69 +58,104 @@ public class TreeTest {
 
 		//转换器
 		List<Tree<String>> treeNodes = TreeUtil.build(nodeList, "0", treeNodeConfig,
-				(treeNode, tree) -> {
-					tree.setId(treeNode.getId());
-					tree.setParentId(treeNode.getParentId());
-					tree.setWeight(treeNode.getWeight());
-					tree.setName(treeNode.getName());
-					// 扩展属性 ...
-					tree.putExtra("extraField", 666);
-					tree.putExtra("other", new Object());
-				});
+			(treeNode, tree) -> {
+				tree.setId(treeNode.getId());
+				tree.setParentId(treeNode.getParentId());
+				tree.setWeight(treeNode.getWeight());
+				tree.setName(treeNode.getName());
+				// 扩展属性 ...
+				tree.putExtra("extraField", 666);
+				tree.putExtra("other", new Object());
+			});
 
-		Assert.assertEquals(treeNodes.size(), 2);
+		assertEquals(treeNodes.size(), 2);
 	}
 
 	@Test
-	public void walkTest(){
+	public void walkTest() {
 		List<String> ids = new ArrayList<>();
 		final Tree<String> tree = TreeUtil.buildSingle(nodeList, "0");
-		tree.walk((tr)-> ids.add(tr.getId()));
+		tree.walk((tr) -> ids.add(tr.getId()));
 
-		Assert .assertEquals(7, ids.size());
+		assertEquals(7, ids.size());
 	}
 
 	@Test
-	public void cloneTreeTest(){
+	public void cloneTreeTest() {
 		final Tree<String> tree = TreeUtil.buildSingle(nodeList, "0");
 		final Tree<String> cloneTree = tree.cloneTree();
 
 		List<String> ids = new ArrayList<>();
-		cloneTree.walk((tr)-> ids.add(tr.getId()));
+		cloneTree.walk((tr) -> ids.add(tr.getId()));
 
-		Assert .assertEquals(7, ids.size());
+		assertEquals(7, ids.size());
 	}
 
 	@Test
-	public void filterTest(){
+	public void filterTest() {
 		// 经过过滤，丢掉"用户添加"节点
 		final Tree<String> tree = TreeUtil.buildSingle(nodeList, "0");
-		tree.filter((t)->{
+		tree.filter((t) -> {
 			final CharSequence name = t.getName();
 			return null != name && name.toString().contains("店铺");
 		});
 
 		List<String> ids = new ArrayList<>();
-		tree.walk((tr)-> ids.add(tr.getId()));
-		Assert .assertEquals(4, ids.size());
+		tree.walk((tr) -> ids.add(tr.getId()));
+		assertEquals(4, ids.size());
 	}
 
 	@Test
-	public void filterNewTest(){
+	public void filterNewTest() {
 		final Tree<String> tree = TreeUtil.buildSingle(nodeList, "0");
 
 		// 经过过滤，生成新的树
-		Tree<String> newTree = tree.filterNew((t)->{
+		Tree<String> newTree = tree.filterNew((t) -> {
 			final CharSequence name = t.getName();
 			return null != name && name.toString().contains("店铺");
 		});
 
 		List<String> ids = new ArrayList<>();
-		newTree.walk((tr)-> ids.add(tr.getId()));
-		Assert .assertEquals(4, ids.size());
+		newTree.walk((tr) -> ids.add(tr.getId()));
+		assertEquals(4, ids.size());
 
 		List<String> ids2 = new ArrayList<>();
-		tree.walk((tr)-> ids2.add(tr.getId()));
-		Assert .assertEquals(7, ids2.size());
+		tree.walk((tr) -> ids2.add(tr.getId()));
+		assertEquals(7, ids2.size());
+	}
+
+
+	@Data
+	static class Area {
+		private Integer id;
+		private String name;
+		private Integer parentId;
+		private List<Area> childrenList;
+
+		public Area(Integer id, String name, Integer parentId) {
+			this.id = id;
+			this.name = name;
+			this.parentId = parentId;
+		}
+	}
+	// 模拟数据
+	static List<Area> areaList = CollUtil.newArrayList();
+	static {
+		areaList.add(new Area(1, "中国", 0));
+		areaList.add(new Area(2, "北京", 1));
+		areaList.add(new Area(3, "上海", 1));
+		areaList.add(new Area(4, "广东", 1));
+		areaList.add(new Area(5, "广州", 4));
+		areaList.add(new Area(6, "深圳", 4));
+		areaList.add(new Area(7, "浙江", 1));
+		areaList.add(new Area(8, "杭州", 7));
+	}
+
+	@Test
+	public void builderTest() {
+		List<Area> list = TreeUtil.build(areaList, 0, Area::getId, Area::getParentId, Area::setChildrenList);
+		final Area root = list.get(0);
+		final Integer parentId = root.getChildrenList().get(0).getParentId();
+		assertEquals(root.getId(), parentId);
 	}
 }

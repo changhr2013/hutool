@@ -2,9 +2,9 @@ package cn.hutool.captcha;
 
 import cn.hutool.captcha.generator.MathGenerator;
 import cn.hutool.core.lang.Console;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.awt.*;
 
@@ -19,21 +19,30 @@ public class CaptchaTest {
 	public void lineCaptchaTest1() {
 		// 定义图形验证码的长和宽
 		LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(200, 100);
-		Assert.assertNotNull(lineCaptcha.getCode());
-		Assert.assertTrue(lineCaptcha.verify(lineCaptcha.getCode()));
+		assertNotNull(lineCaptcha.getCode());
+		assertTrue(lineCaptcha.verify(lineCaptcha.getCode()));
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void lineCaptchaTest3() {
 		// 定义图形验证码的长和宽
 		LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(200, 70, 4, 15);
+		lineCaptcha.setBackground(null);
+		lineCaptcha.write("d:/test/captcha/tellow.png");
+	}
+
+	@Test
+	@Disabled
+	public void lineCaptchaTestWithSize() {
+		// 定义图形验证码的长和宽
+		LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(200, 70, 4, 15, 0.65f);
 		lineCaptcha.setBackground(Color.yellow);
 		lineCaptcha.write("f:/test/captcha/tellow.png");
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void lineCaptchaWithMathTest() {
 		// 定义图形验证码的长和宽
 		LineCaptcha lineCaptcha = CaptchaUtil.createLineCaptcha(200, 80);
@@ -43,7 +52,7 @@ public class CaptchaTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void lineCaptchaTest2() {
 
 		// 定义图形验证码的长和宽
@@ -63,7 +72,7 @@ public class CaptchaTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void circleCaptchaTest() {
 
 		// 定义图形验证码的长和宽
@@ -75,12 +84,22 @@ public class CaptchaTest {
 		captcha.verify("1234");
 	}
 
+
 	@Test
-	@Ignore
+	@Disabled
+	public void circleCaptchaTestWithSize() {
+		// 定义图形验证码的长和宽
+		CircleCaptcha captcha = CaptchaUtil.createCircleCaptcha(200, 70, 4, 15, 0.65f);
+		captcha.setBackground(Color.yellow);
+		captcha.write("f:/test/captcha/circle.png");
+	}
+
+	@Test
+	@Disabled
 	public void shearCaptchaTest() {
 
 		// 定义图形验证码的长和宽
-		ShearCaptcha captcha = CaptchaUtil.createShearCaptcha(203, 100, 4, 4);
+		ShearCaptcha captcha = CaptchaUtil.createShearCaptcha(200, 100, 4, 4);
 		// ShearCaptcha captcha = new ShearCaptcha(200, 100, 4, 4);
 		// 图形验证码写出，可以写出到文件，也可以写出到流
 		captcha.write("f:/captcha/shear.png");
@@ -89,7 +108,7 @@ public class CaptchaTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void shearCaptchaTest2() {
 
 		// 定义图形验证码的长和宽
@@ -101,7 +120,7 @@ public class CaptchaTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void ShearCaptchaWithMathTest() {
 		// 定义图形验证码的长和宽
 		ShearCaptcha captcha = CaptchaUtil.createShearCaptcha(200, 45, 4, 4);
@@ -113,8 +132,18 @@ public class CaptchaTest {
 		captcha.verify("1234");
 	}
 
+
 	@Test
-	@Ignore
+	@Disabled
+	public void ShearCaptchaTestWithSize() {
+		// 定义图形验证码的长和宽
+		ShearCaptcha captcha = CaptchaUtil.createShearCaptcha(200, 70, 4, 15, 0.65f);
+		captcha.setBackground(Color.yellow);
+		captcha.write("f:/test/captcha/shear.png");
+	}
+
+	@Test
+	@Disabled
 	public void GifCaptchaTest() {
 		GifCaptcha captcha = CaptchaUtil.createGifCaptcha(200, 100, 4);
 		captcha.write("d:/test/gif_captcha.gif");
@@ -122,8 +151,17 @@ public class CaptchaTest {
 	}
 
 	@Test
-	@Ignore
-	public void bgTest(){
+	@Disabled
+	public void GifCaptchaTestWithSize() {
+		// 定义图形验证码的长和宽
+		GifCaptcha captcha = CaptchaUtil.createGifCaptcha(200, 70, 4, 15, 0.65f);
+		captcha.setBackground(Color.yellow);
+		captcha.write("f:/test/captcha/gif.png");
+	}
+
+	@Test
+	@Disabled
+	public void bgTest() {
 		LineCaptcha captcha = CaptchaUtil.createLineCaptcha(200, 100, 4, 1);
 		captcha.setBackground(Color.WHITE);
 		captcha.write("d:/test/test.jpg");

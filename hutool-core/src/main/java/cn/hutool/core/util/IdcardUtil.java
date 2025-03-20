@@ -278,8 +278,8 @@ public class IdcardUtil {
 			return false;
 		}
 
-		// 省份
-		final String proCode = idcard.substring(0, 2);
+		// 截取省份代码。新版外国人永久居留身份证以9开头，第二三位是受理地代码
+		final String proCode = idcard.startsWith("9") ? idcard.substring(1, 3): idcard.substring(0, 2);
 		if (null == CITY_CODES.get(proCode)) {
 			return false;
 		}
@@ -340,6 +340,11 @@ public class IdcardUtil {
 		if (StrUtil.isBlank(idcard)) {
 			return null;
 		}
+
+		// issue#IBP6T1 中文空格替换为英文
+		idcard = StrUtil.replace(idcard, "（", "(");
+		idcard = StrUtil.replace(idcard, "）", ")");
+
 		String[] info = new String[3];
 		String card = idcard.replaceAll("[()]", "");
 		if (card.length() != 8 && card.length() != 9 && idcard.length() != 10) {
@@ -413,6 +418,10 @@ public class IdcardUtil {
 	 * @return 验证码是否符合
 	 */
 	public static boolean isValidHKCard(String idcard) {
+		if(false == idcard.matches("^[A-Z]{1,2}[0-9]{6}\\(?[0-9A]\\)?$")){
+			return false;
+		}
+
 		String card = idcard.replaceAll("[()]", "");
 		int sum;
 		if (card.length() == 9) {

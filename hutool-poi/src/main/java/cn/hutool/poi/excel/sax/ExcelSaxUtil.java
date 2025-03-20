@@ -5,6 +5,7 @@ import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.exceptions.DependencyException;
 import cn.hutool.core.io.IORuntimeException;
 import cn.hutool.core.util.CharUtil;
+import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.poi.excel.ExcelDateUtil;
 import cn.hutool.poi.excel.sax.handler.RowHandler;
@@ -46,8 +47,8 @@ public class ExcelSaxUtil {
 	 */
 	public static ExcelSaxReader<?> createSaxReader(boolean isXlsx, RowHandler rowHandler) {
 		return isXlsx
-				? new Excel07SaxReader(rowHandler)
-				: new Excel03SaxReader(rowHandler);
+			? new Excel07SaxReader(rowHandler)
+			: new Excel03SaxReader(rowHandler);
 	}
 
 	/**
@@ -183,6 +184,8 @@ public class ExcelSaxUtil {
 			throw new IORuntimeException(e);
 		} catch (SAXException e) {
 			throw new POIException(e);
+		} catch (final StopReadException e) {
+			// issue#3820 跳过，用户抛出此异常，表示强制结束读取
 		}
 	}
 
@@ -264,7 +267,15 @@ public class ExcelSaxUtil {
 		if (StrUtil.isBlank(value)) {
 			return null;
 		}
-		return getNumberValue(Double.parseDouble(value), numFmtString);
+
+		// issue#IB0EJ9 可能精度丢失，对含有小数的value判断并转为BigDecimal
+		final double number = Double.parseDouble(value);
+		if (StrUtil.contains(value, CharUtil.DOT) && !value.equals(Double.toString(number))) {
+			// 精度丢失
+			return NumberUtil.toBigDecimal(value);
+		}
+
+		return getNumberValue(number, numFmtString);
 	}
 
 	/**

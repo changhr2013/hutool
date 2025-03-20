@@ -59,7 +59,7 @@ public class PathMover {
 		}
 		this.src = src;
 		this.target = Assert.notNull(target, "Target path must be not null !");
-		this.options = ObjUtil.defaultIfNull(options, new CopyOption[]{});;
+		this.options = ObjUtil.defaultIfNull(options, () -> new CopyOption[]{});
 	}
 
 	/**
@@ -101,9 +101,10 @@ public class PathMover {
 		try {
 			return Files.move(src, target, options);
 		} catch (final IOException e) {
-			if (e instanceof FileAlreadyExistsException) {
-				// 目标文件已存在，直接抛出异常
-				// issue#I4QV0L@Gitee
+			if (e instanceof FileAlreadyExistsException || e instanceof AccessDeniedException) {
+				// issue#I4QV0L@Gitee issue#I95CLT@Gitee
+				// FileAlreadyExistsException 目标已存在
+				// AccessDeniedException 目标已存在且只读
 				throw new IORuntimeException(e);
 			}
 			// 移动失败，可能是跨分区移动导致的，采用递归移动方式
@@ -129,19 +130,14 @@ public class PathMover {
 	 */
 	public Path moveContent() {
 		final Path src = this.src;
+		final Path target = this.target;
 		if (PathUtil.isExistsAndNotDirectory(target, false)) {
 			// 文件移动调用move方法
 			return move();
 		}
 
-		final Path target = this.target;
-		if (PathUtil.isExistsAndNotDirectory(target, false)) {
-			// 目标不能为文件
-			throw new IllegalArgumentException("Can not move dir content to a file");
-		}
-
 		// issue#2893 target 不存在导致NoSuchFileException
-		if (PathUtil.equals(src, target)) {
+		if (Files.exists(target) && PathUtil.equals(src, target)) {
 			// issue#2845，当用户传入目标路径与源路径一致时，直接返回，否则会导致删除风险。
 			return target;
 		}

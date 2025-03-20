@@ -7,10 +7,7 @@ import cn.hutool.core.comparator.PropertyComparator;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.convert.ConverterRegistry;
 import cn.hutool.core.exceptions.UtilException;
-import cn.hutool.core.lang.Assert;
-import cn.hutool.core.lang.Editor;
-import cn.hutool.core.lang.Filter;
-import cn.hutool.core.lang.Matcher;
+import cn.hutool.core.lang.*;
 import cn.hutool.core.lang.func.Func1;
 import cn.hutool.core.lang.hash.Hash32;
 import cn.hutool.core.map.MapUtil;
@@ -311,7 +308,7 @@ public class CollUtil {
 	}
 
 	/**
-	 * 两个集合的差集<br>
+	 * 两个集合的对称差集 (A-B)∪(B-A)<br>
 	 * 针对一个集合中存在多个相同元素的情况，计算两个集合中此元素的个数，保留两个集合中此元素个数差的个数<br>
 	 * 例如：
 	 *
@@ -364,6 +361,10 @@ public class CollUtil {
 	 * @return 单差集
 	 */
 	public static <T> Collection<T> subtract(Collection<T> coll1, Collection<T> coll2) {
+		if(isEmpty(coll1) || isEmpty(coll2)){
+			return coll1;
+		}
+
 		Collection<T> result = ObjectUtil.clone(coll1);
 		try {
 			if (null == result) {
@@ -496,13 +497,16 @@ public class CollUtil {
 	}
 
 	/**
-	 * 集合1中是否包含集合2中所有的元素，即集合2是否为集合1的子集
+	 * 集合1中是否包含集合2中所有的元素。<br>
+	 * 当集合1和集合2都为空时，返回{@code true}
+	 * 当集合2为空时，返回{@code true}
 	 *
 	 * @param coll1 集合1
 	 * @param coll2 集合2
 	 * @return 集合1中是否包含集合2中所有的元素
 	 * @since 4.5.12
 	 */
+	@SuppressWarnings("SuspiciousMethodCalls")
 	public static boolean containsAll(Collection<?> coll1, Collection<?> coll2) {
 		if (isEmpty(coll1)) {
 			return isEmpty(coll2);
@@ -512,12 +516,31 @@ public class CollUtil {
 			return true;
 		}
 
-		if (coll1.size() < coll2.size()) {
-			return false;
+		// Set直接判定
+		if(coll1 instanceof Set){
+			return coll1.containsAll(coll2);
 		}
 
-		for (Object object : coll2) {
-			if (false == coll1.contains(object)) {
+		// 参考Apache commons collection4
+		// 将时间复杂度降低到O(n + m)
+		final Iterator<?> it = coll1.iterator();
+		final Set<Object> elementsAlreadySeen = new HashSet<>(coll1.size(), 1);
+		for (final Object nextElement : coll2) {
+			if (elementsAlreadySeen.contains(nextElement)) {
+				continue;
+			}
+
+			boolean foundCurrentElement = false;
+			while (it.hasNext()) {
+				final Object p = it.next();
+				elementsAlreadySeen.add(p);
+				if (Objects.equals(nextElement, p)) {
+					foundCurrentElement = true;
+					break;
+				}
+			}
+
+			if (false == foundCurrentElement) {
 				return false;
 			}
 		}
@@ -2176,7 +2199,7 @@ public class CollUtil {
 			iter = (Iterator) value;
 		} else if (value instanceof Iterable) {
 			if(value instanceof Map && BeanUtil.isBean(TypeUtil.getClass(elementType))){
-				//https://github.com/dromara/hutool/issues/3139
+				//https://github.com/chinabugotech/hutool/issues/3139
 				// 如果值为Map，而目标为一个Bean，则Map应整体转换为Bean，而非拆分成Entry转换
 				iter = new ArrayIter<>(new Object[]{value});
 			}else{

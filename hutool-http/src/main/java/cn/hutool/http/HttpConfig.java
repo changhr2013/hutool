@@ -94,6 +94,12 @@ public class HttpConfig {
 	 * 自动重定向时是否处理cookie
 	 */
 	boolean followRedirectsCookie;
+	/**
+	 * issue#3719 如果为true，则当请求头中Content-Type为空时，使用默认的Content-Type，即application/x-www-form-urlencoded
+	 *
+	 * @since 5.8.33
+	 */
+	boolean useDefaultContentTypeIfNull = true;
 
 	/**
 	 * 设置超时，单位：毫秒<br>
@@ -181,7 +187,7 @@ public class HttpConfig {
 	 */
 	public HttpConfig setHttpProxy(String host, int port) {
 		final Proxy proxy = new Proxy(Proxy.Type.HTTP,
-				new InetSocketAddress(host, port));
+			new InetSocketAddress(host, port));
 		return setProxy(proxy);
 	}
 
@@ -312,6 +318,18 @@ public class HttpConfig {
 	 */
 	public HttpConfig setFollowRedirectsCookie(boolean followRedirectsCookie) {
 		this.followRedirectsCookie = followRedirectsCookie;
+		return this;
+	}
+
+	/**
+	 * 设置是否使用默认Content-Type，如果请求中未设置Content-Type，是否使用默认值
+	 *
+	 * @param useDefaultContentTypeIfNull 是否使用默认Content-Type
+	 * @return this
+	 * @since 5.8.33
+	 */
+	public HttpConfig setUseDefaultContentTypeIfNull(boolean useDefaultContentTypeIfNull) {
+		this.useDefaultContentTypeIfNull = useDefaultContentTypeIfNull;
 		return this;
 	}
 }

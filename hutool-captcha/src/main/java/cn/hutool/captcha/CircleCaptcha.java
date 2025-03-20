@@ -1,13 +1,12 @@
 package cn.hutool.captcha;
 
+import cn.hutool.captcha.generator.CodeGenerator;
+import cn.hutool.captcha.generator.RandomGenerator;
 import cn.hutool.core.img.GraphicsUtil;
 import cn.hutool.core.img.ImgUtil;
-import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.RandomUtil;
 
-import java.awt.Color;
-import java.awt.Graphics2D;
-import java.awt.Image;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.util.concurrent.ThreadLocalRandom;
 
@@ -24,7 +23,7 @@ public class CircleCaptcha extends AbstractCaptcha {
 	/**
 	 * 构造
 	 *
-	 * @param width 图片宽
+	 * @param width  图片宽
 	 * @param height 图片高
 	 */
 	public CircleCaptcha(int width, int height) {
@@ -34,8 +33,8 @@ public class CircleCaptcha extends AbstractCaptcha {
 	/**
 	 * 构造
 	 *
-	 * @param width 图片宽
-	 * @param height 图片高
+	 * @param width     图片宽
+	 * @param height    图片高
 	 * @param codeCount 字符个数
 	 */
 	public CircleCaptcha(int width, int height, int codeCount) {
@@ -45,25 +44,55 @@ public class CircleCaptcha extends AbstractCaptcha {
 	/**
 	 * 构造
 	 *
-	 * @param width 图片宽
-	 * @param height 图片高
-	 * @param codeCount 字符个数
+	 * @param width          图片宽
+	 * @param height         图片高
+	 * @param codeCount      字符个数
 	 * @param interfereCount 验证码干扰元素个数
 	 */
 	public CircleCaptcha(int width, int height, int codeCount, int interfereCount) {
-		super(width, height, codeCount, interfereCount);
+		this(width, height, new RandomGenerator(codeCount), interfereCount);
 	}
+
+	/**
+	 * 构造
+	 *
+	 * @param width          图片宽
+	 * @param height         图片高
+	 * @param generator      验证码生成器
+	 * @param interfereCount 验证码干扰元素个数
+	 */
+	public CircleCaptcha(int width, int height, CodeGenerator generator, int interfereCount) {
+		super(width, height, generator, interfereCount);
+	}
+
+	/**
+	 * 构造
+	 *
+	 * @param width          图片宽
+	 * @param height         图片高
+	 * @param codeCount      字符个数
+	 * @param interfereCount 验证码干扰元素个数
+	 * @param size 			 字体的大小 高度的倍数
+	 */
+	public CircleCaptcha(int width, int height, int codeCount, int interfereCount, float size) {
+		super(width, height, new RandomGenerator(codeCount), interfereCount, size);
+	}
+
 
 	@Override
 	public Image createImage(String code) {
-		final BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-		final Graphics2D g = ImgUtil.createGraphics(image, ObjectUtil.defaultIfNull(this.background, Color.WHITE));
+		final BufferedImage image = new BufferedImage(width, height, (null == this.background) ? BufferedImage.TYPE_4BYTE_ABGR : BufferedImage.TYPE_INT_RGB);
+		final Graphics2D g = ImgUtil.createGraphics(image, this.background);
 
-		// 随机画干扰圈圈
-		drawInterfere(g);
+		try {
+			// 随机画干扰圈圈
+			drawInterfere(g);
 
-		// 画字符串
-		drawString(g, code);
+			// 画字符串
+			drawString(g, code);
+		} finally {
+			g.dispose();
+		}
 
 		return image;
 	}
@@ -72,7 +101,7 @@ public class CircleCaptcha extends AbstractCaptcha {
 	/**
 	 * 绘制字符串
 	 *
-	 * @param g {@link Graphics2D}画笔
+	 * @param g    {@link Graphics2D}画笔
 	 * @param code 验证码
 	 */
 	private void drawString(Graphics2D g, String code) {

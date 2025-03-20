@@ -2,11 +2,295 @@
 # 🚀Changelog
 
 -------------------------------------------------------------------------------------------------------------
-# 5.8.25(2024-01-02)
+# 5.8.37(2025-03-18)
+
+### 🐣新特性
+* 【json   】      ObjectMapper删除重复trim（pr#3859@Github）
+* 【core   】      `FileWriter`增加方法，可选是否追加换行符（issue#3858@Github）
+* 【core   】      `IdcardUtil`验证10位身份证兼容中英文括号（issue#IBP6T1@Gitee）
+* 【extra  】      `PinyinUtil`增加重载可选是否返回声调（pr#3875@Github）
+* 【http   】      `HttpBase`增加重载可选是否返回声调（pr#3883@Github）
+* 【core   】      增加`VersionUtil`版本比较工具（pr#3876@Github）
+* 【db     】      增加GoldenDB识别（pr#3886@Github）
+* 【http   】      改进`UrlQuery`对无参URL增加判断识别（issue#IBRVE4@Gitee）
+
+### 🐞Bug修复
+* 【setting】      修复`SettingLoader`load未抛出异常导致配置文件无法正常遍历的问题（pr#3868@Github）
+* 【cache  】      修复`ReentrantCache#getOrRemoveExpired`方法丢失onRemove触发问题（pr#1315@Gitee）
+* 【json   】      修复`JsonUtil.toBean`泛型数组类型丢失问题（pr#3876@Github）
+* 【http   】      修复`HttpUtil.normalizeParams`规则问题（issue#IBQIYQ@Gitee）
+* 【http   】      修复`NumberChineseFormatter.format`中自定义单位在0时错误问题（issue#3888@Github）
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.36(2025-02-18)
+
+### 🐣新特性
+* 【crypto 】      增加BCUtil.decodeECPrivateKey方法（issue#3829@Github）
+* 【core   】      增加HtmlUtil.cleanEmptyTag方法（pr#3838@Github）
+* 【db     】      GlobalDbSetting优化默认配置读取规则，优先读取文件而非jar中的文件（issue#900@Github）
+* 【dfa    】      删除StopChar类中存在重复字符（pr#3841@Github）
+* 【http   】      支持鸿蒙设备 UA 解析（pr#1301@Gitee）
+
+### 🐞Bug修复
+* 【aop    】      修复ProxyUtil可能的空指针问题（issue#IBF20Z@Gitee）
+* 【core   】      修复XmlUtil转义调用方法错误问题，修复XmlEscape未转义单引号问题（pr#3837@Github）
+* 【core   】      修复FileUtil.isAbsolutePath没有判断smb路径问题（pr#1299@Gitee）
+* 【core   】      修复AbstractFilter没有检查参数长度问题（issue#3854@Github）
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.35(2024-12-25)
+
+### 🐣新特性
+* 【poi    】      优化ExcelWriter中使用比较器writer的方法，只对第一条数据进行排序（pr#3807@Github）
+* 【extra  】      优化Ftp.download，返回false抛出异常（issue#3805@Github）
+* 【core   】      优化MAC地址正则（issue#IB95X4@Gitee）
+* 【json   】      JSON的getByPath方法新增更为通用的指定出参类型重载（pr#3814@Github）
+* 【core   】      DateUtil.parseUTC方法标记废弃，改名为parseISO8601（issue#IBB6I5@Gitee）
+* 【core   】      添加EnumUtil#getBy(Class, Func1, Object)方法（pr#1283@Gitee）
+* 【db     】      添加Entity.addCondition方法（issue#IBCDL2@Gitee）
+* 【poi    】      添加StopReadException，定义sax读取时用户可手动终止（issue#3820@Github）
+
+### 🐞Bug修复
+* 【crypto 】      修复JWTSignerUtil.createSigner中algorithmId未转换问题（issue#3806@Github）
+* 【core   】      修复DateUtil.rangeContains未重置问题（issue#IB8OFS@Gitee）
+* 【cache  】      修复StampedCache类get方法并发问题（issue#IBCIQG@Gitee）
+* 【cache  】      修复FIFOCache类使用StampedCache导致并发读的并发问题（issue#IBCIQG@Gitee）
+* 【cache  】      废弃StampedCache，可能造成Map循环调用导致死锁（issue#IBDGBZ@Gitee）
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.34(2024-11-25)
+
+### 🐣新特性
+* 【http   】      增加Windows微信浏览器识别（issue#IB3SJF@Gitee）
+* 【core   】      ZipUtil.unzip增加编码容错（issue#I3UZ28@Gitee）
+* 【core   】      Calculator兼容`x`字符作为乘号（issue#3787@Github）
+* 【poi    】      Excel07SaxReader中，对于小数类型，增加精度判断（issue#IB0EJ9@Gitee）
+* 【extra  】      SpringUtil增加getBean重载（issue#3779@Github）
+* 【core   】      DataSizeUtil 新增format方法（issue#IB6UUX@Gitee）
+
+### 🐞Bug修复
+* 【core   】      修复DateUtil.rangeToList中step小于等于0时无限循环问题（issue#3783@Github）
+* 【cron   】      修复cron模块依赖log模块问题
+* 【extra  】      修复MailUtil发送html格式邮件无法正常展示图片问题(pr#1279@Gitee)
+* 【core   】      【可能的向下兼容问题】修复双引号转义符转义错误问题，修改规则后，对非闭合双引号字段的策略变更，如"aa，则被识别为aa(issue#IB5UQ8@Gitee)
+* 【extra  】      修复Sftp中传入Session重连时逻辑错误问题(issue#IB69U8@Gitee)
+* 【json   】      修复JSONUtil.toBean()中将JSON数组字符串转Map对象返回错误问题(issue#3795@Github)
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.33(2024-11-05)
+
+### 🐣新特性
+* 【core   】      SyncFinisher增加setExecutorService方法（issue#IANKQ1@Gitee）
+* 【http   】      HttpConfig增加`setUseDefaultContentTypeIfNull`方法（issue#3719@Github）
+* 【core   】      用ArrayList重新实现权重随机类：WeightListRandom（pr#3720@Github）
+* 【crypto 】      SM2解密时，兼容GmSSL非压缩省略的04头的密文（issue#IAP1QJ@Gitee）
+* 【core   】      兼容NumberUtil.add方法传入整型自动类型转换为浮点类型的精度丢失问题（pr#3721@Github）
+* 【core   】      ModifierUtil明确注释，并增加hasAllModifiers方法（issue#IAQ2U0@Gitee）
+* 【http   】      HttpRequest增加setFixedContentLength方法（issue#3462@Github）
+* 【db     】      AbstractDb增加getDs方法（issue#IARKZL@Gitee）
+* 【db     】      QrCodeUtil添加二维码logo支持配置圆角（pr#3747@Github）
+* 【core   】      TreeUtil.buildSingle指定rootId节点存在时，作为根节点（issue#IAUSHR@Gitee）
+* 【core   】      EscapeUtil.escapeHtml4增加空处理（issue#IAZMYU@Gitee）
+* 【core   】      PropDesc.isTransientForGet使用className，避免Android下类找不到问题（issue#IB0JP5@Gitee）
+* 【core   】      优化NumberUtil.count（pr#3772@Github）
+* 【crypto 】      SM2.signHex改名为signHexFromHex，原名标记废弃，避免歧义（issue#IB0NVY@Gitee）
+* 【all    】      优化所调用的ObjectUtil#defaultIfNull避免重复创建（pr#1274@Gitee）
+* 【core   】      NetUtil.bigIntegerToIPv6增加长度修正（issue#IB27HV@Gitee）
+
+### 🐞Bug修复
+* 【json   】      修复JSONConfig.setDateFormat设置后toBean无效问题（issue#3713@Github）
+* 【core   】      修复RegexPool.CHINESE_NAME范围太大的问题（issue#IAOGDR@Gitee）
+* 【http   】      修复重定向没有按照RFC7231规范跳转的问题，修改为除了307外重定向使用GET方式（issue#3722@Github）
+* 【core   】      修复ArrayUtil.lastIndexOfSub死循环问题（issue#IAQ16E@Gitee）
+* 【core   】      修复ImgUtil.write写出临时文件未清理问题（issue#IAPZG7@Gitee）
+* 【json   】      修复ignoreNullValue在JSONArray中无效问题（issue#3759@Github）
+
+-------------------------------------------------------------------------------------------------------------
+**# 5.8.32(2024-08-30)
+
+### 🐣新特性
+* 【core   】      FileUtil.getTotalLines()支持CR换行符（issue#IAMZYR@Gitee）
+* 【json   】      GlobalSerializeMapping增加null检查（issue#IANH1Y@Gitee）
+
+### 🐞Bug修复
+* 【http   】      修复getFileNameFromDisposition不符合规范问题（issue#IAKBPD@Gitee）
+* 【crypto 】      修复SymmetricCrypto.setParams和setRandom没有加锁问题（issue#IAJIY3@Gitee）
+* 【crypto 】      修复ZipUtil压缩成流的方法检查文件时报错问题（issue#3697@Github）
+* 【core   】      修复CopyOptions.setFieldValueEditor后生成null值setIgnoreNullValue无效问题（issue#3702@Github）
+* 【json   】      修复JSONConfig.setDateFormat设置后setWriteLongAsString失效问题（issue#IALQ0N@Gitee）
+* 【core   】      修复Tree.cloneTree的Parent节点引用错误问题（issue#IANJTC@Gitee）
+
+-------------------------------------------------------------------------------------------------------------**
+# 5.8.31(2024-08-12)
+
+### 🐣新特性
+* 【core   】      TreeUtil增加build方法，可以构建Bean的树结构（pr#3692@Github）
+
+### 🐞Bug修复
+* 【extra  】      修复JakartaMailUtil引用javax的问题
+* 【core   】      修复GraphicsUtil.drawString方法签名变化导致的问题（issue#3694@Github）
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.30(2024-08-09)
+
+### 🐣新特性
+* 【core   】      Converter转换规则变更，空对象、空值转为Bean时，创建默认对象，而非null（issue#3649@Github）
+* 【core   】      UrlQuery增加remove方法
+* 【extra  】      增加JakartaMailUtil，支持新包名的mail
+* 【core   】      CharSequenceUtil增加removeAllPrefix和removeAllSuffix方法（pr#3655@Github）
+* 【core   】      CharSequenceUtil增加stripAll方法（pr#3659@Github）
+* 【crypto 】      支持"RSA/ECB/OAEPWithSHA-1AndMGF1Padding"的RSA加解密（pr#3675@Github）
+* 【core   】      Opt增加ifFail（pr#1239@Gitee）
+* 【poi    】      增加GlobalPoiConfig（issue#IAEHJH@Gitee）
+* 【core   】      优化IndexedComparator性能（pr#1240@Gitee）
+* 【http   】      改进ContentType.get忽略空格（pr#3664@Github）
+* 【http   】      CompressUtil.createExtractor支持tgz自动识别（pr#3674@Github）
+* 【poi    】      ExcelWriter.autoSizeColumn增加可选widthRatio参数，可配置中文字符宽度倍数（pr#3689@Github）
+* 【mail   】      MailAccount增加自定义参数支持（issue#3687@Github）
+* 【mail   】      增加文字颜色与背景颜色色差设置（pr#1252@gitee）
+* 【mail   】      XmlUtil增加xmlToBean重载，支持CopyOptions参数（issue#IAISBB@gitee）
+* 【core   】      增加默认色差方法（pr#1257@gitee）
+* 【all    】      单元测试由Junit4变更为Junit5
+
+### 🐞Bug修复
+* 【core   】      修复因RFC3986理解有误导致的UrlPath处理冒号转义问题（issue#IAAE88@Gitee）
+* 【core   】      修复FileUtil.cleanEmpty无法正确清空递归空目录问题（pr#1233@Gitee）
+* 【core   】      修复BeanUtil.copyProperties中mapToMap时key被转为String问题（issue#3645@Github）
+* 【core   】      修复FileUtil.file末尾换行符导致路径判断错误的问题（issue#IAB65V@Gitee）
+* 【core   】      修复FileTypeUtil.getType空指针问题（issue#IAD5JM@Gitee）
+* 【core   】      修复IdcardUtil.isValidHKCard校验问题（issue#IAFOLI@Gitee）
+* 【core   】      修复Convert.digitToChinese(0)输出金额无`元整问题`（issue#3662@Github）
+* 【core   】      修复CsvParser中对正文中双引号处理逻辑问题（pr#1244@Gitee）
+* 【core   】      修复ZipUtil.zip压缩到本目录时可能造成的死循环问题（issue#IAGYDG@Gitee）
+* 【cache  】      修复AbstractCache.get中锁不一致导致的并发问题（issue#3686@Github）
+* 【cron   】      修复CronPatternUtil.nextDateAfter栈溢出问题（issue#3685@Github）
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.29(2024-07-03)
+
+### 🐣新特性
+* 【core   】      DateUtil增加offsetYear方法
+* 【core   】      ListUtil增加move方法（issue#3603@Github）
+* 【core   】      CollUtil.subtract增加空判定（issue#3605@Github）
+* 【core   】      优化DateUtil.format(Date date, String format)接口效率（pr#1226@Gitee）
+* 【csv    】      CsvWriter.writeBeans增加重载，可选是否写出表头（issue#IA57W2@Gitee）
+* 【core   】      BetweenFormatter支持自定义设置单位（pr#1228@Gitee）
+* 【cache  】      Cache.put变更策略，对于替换的键值对，不清理队列（issue#3618@Github）
+* 【core   】      添加 Windows 资源管理器风格字符串比较器（pr#3620@Github）
+* 【core   】      Week.of支持中文名称（issue#3637@Github）
+* 【core   】      ThreadUtil.newExecutor等方法变更方法签名，返回值变更为ThreadPoolExecutor（pr#1230@Gitee）
+
+### 🐞Bug修复
+* 【core   】      修复AnnotationUtil可能的空指针错误
+* 【core   】      修复BeanUtil.isBean判断Dict错误问题（issue#I9VTZG@Gitee）
+* 【core   】      修复VersionComparator传入空字符串报错问题（pr#3614@Github）
+* 【core   】      修复CaseInsensitiveLinkedMap顺序错误问题（issue#IA4K4F@Gitee）
+* 【core   】      修复DateUtil.offset空指针问题（issue#3617@Github）
+* 【core   】      修复PathMover.moveContent问题（issue#IA5Q8D@Gitee）
+* 【db     】      修复PooledConnection可能的数据库驱动未找到问题（issue#IA6EUQ@Gitee）
+* 【http   】      修复Mac下的微信浏览器被识别为移动端问题（issue#IA74K2@Gitee）
+* 【core   】      修复Tailer指定初始读取行数的计算错误问题（issue#IA77ML@Gitee）
+* 【http   】      修复getFileNameFromDisposition获取头错误问题（issue#3632@Github）
+* 【core   】      修复\n#出现在双引号中解析错误问题（issue#IA8WE0@Gitee）
+* 【core   】      修复FastDatePrinter处理YY错误问题（issue#3641@Github）
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.28(2024-05-29)
+
+### 🐣新特性
+* 【core   】      修正XmlUtil的omitXmlDeclaration描述注释（issue#I9CPC7@Gitee）
+* 【core   】      StrUtil增加toStringOrEmpty方法（issue#I9CPC7@Gitee）
+* 【extra  】      设置jsch登录认证方式，跳过Kerberos身份验证（pr#3530@Github）
+* 【extra  】      增加设置验证码大小和针对alias注释（pr#3533@Github）
+* 【json   】      JSONConfig增加setWriteLongAsString可选是否将Long写出为String类型（issue#3541@Github）
+* 【cache  】      CacheUtil.newTimedCache增加有schedulePruneDelay参数的重载方法（issue#I9HO25@Gitee）
+* 【core   】      NumberChineseFormatter提供阿拉伯转中文支持多位小数的方法（pr#3552@Github）
+* 【captcha】      Captcha.setBackground为null时背景透明（issue#3558@Github）
+* 【captcha】      HttpDownloader.downloadBytes增加超时参数重载（issue#3556@Github）
+* 【http   】      增加ExceptionFilter和DefaultExceptionFilter支持异常处理（issue#3568@Github）
+* 【poi    】      增加ExcelWriter.addIgnoredErrors，支持忽略警告小标
+* 【core   】      PropertyComparator增加compareSelf构造重载（issue#3569@Github）
+* 【db     】      增加OceanBase的driver推断（pr#1217@Gitee）
+* 【http   】      HttpRequest#get不再尝试File路径（issue#I9O6DA@Gitee）
+* 【core   】      增加IdConstants，提高Snowflake初始化性能（issue#3581@Github）
+* 【core   】      优化 CharSequenceUtil工具类 startWithAny()、startWithAnyIgnoreCase() 参数命名错误问题（pr#1219@Gitee）
+* 【core   】      ListUtil.setOrPadding增加重载，可选限制index大小（issue#3586@Github）
+* 【http   】      getFileNameFromDisposition更加规范，从多个头的值中获取，且`filename*`优先级更高（pr#3590@Gitee）
+* 【core   】      CsvWriter增加重载writeBeans方法，支持可选bean字段（pr#1222@Gitee）
+* 【core   】      LocalDateTimeUtil增加beginOfDay和endOfDay重载（issue#3594@Github）
+* 【core   】      NumberUtil.pow支持负数（issue#3598@Github）
+
+### 🐞Bug修复
+* 【http   】      修复HttpUtil.urlWithFormUrlEncoded方法重复编码问题（issue#3536@Github）
+* 【core   】      修复FileMagicNumber.getMagicNumber空指针问题（issue#I9FE8B@Gitee）
+* 【extra  】      修复CompressUtil工具多出\问题（issue#I71K5V@Gitee）
+* 【db     】      解决oracle情况下setObject(inputStream)报错问题，java.sql.SQLException: 无效的列类型问题（pr#1207@Gitee）
+* 【core   】      解决CalendarUtil.isSameDay时区不同导致结果错误问题（pr#3548@Github）
+* 【core   】      修复RandomUtil.randomStringWithoutStr方法问题（pr#1209@Gitee）
+* 【http   】      修复HttpRequest.header相同key被覆盖问题（issue#I9I61C@Gitee）
+* 【core   】      修复TemporalAccessorConverter自定义格式转换问题（issue#I9HQQE@Gitee）
+* 【cron   】      修复CronPattern.nextMatchAfter匹配初始值问题（issue#I9FQUA@Gitee）
+* 【core   】      修复FileUtil.copyFile没有创建父目录导致的问题（issue#3557@Github）
+* 【http   】      修复HttpDownloader全局超时无效问题（issue#3556@Github）
+* 【core   】      修复ZipReader.checkZipBomb遇到空目录报错问题（issue#I9K494@Gitee）
+* 【db     】      修复Oracle下特殊表名导致meta信息获取不到问题（issue#I9BANE@Gitee）
+* 【db     】      修复FuncComparator.thenComparing不生效问题（issue#3569@Github）
+* 【core   】      修复EnumUtil空指针问题（issue#I9NSZ4@Gitee）
+* 【core   】      修复NumberWordFormatter.format小数问题（issue#3579@Github）
+* 【db     】      修复JndiDSFactory空指针问题
+* 【core   】      修复BiMap.put错误的返回值（pr#1218@Gitee）
+* 【core   】      修复BooleanUtil.andOfWrap针对null错误问题（issue#3587@Github）
+* 【core   】      修复FileUtil#getTotalLines在JDK9+结果错误问题（issue#3591@Github）
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.27(2024-03-29)
+
+### 🐣新特性
+* 【extra 】      FreemarkerEngine修改默认版本参数
+* 【db    】      增加达梦数据库方言（pr#1178@Gitee）
+* 【core  】      HexUtil#format方法增加prefix参数（issue#I93PU9@Gitee）
+* 【core  】      StrUtil.replace歧义，修改为replaceByCodePoint（issue#I96LWH@Gitee）
+* 【core  】      FileUtil和PathUtil增加Resource重载（issue#I97FJT@Gitee）
+* 【core  】      优化ThreadUtil.safeSleep，使用System.nanoTime()（issue#I9BMGK@Gitee）
+* 【db    】      新增数据库Wrapper支持反解（pr#1192@Gitee）
+* 【core  】      新增RFC2822日期格式解析支持（issue#I9C2D4@Gitee）
+
+### 🐞Bug修复
+* 【core  】      修复PathMover对目标已存在且只读文件报错错误问题（issue#I95CLT@Gitee）
+* 【json  】      修复JSONUtil序列化和反序列化预期的结果不一致问题（pr#3507@Github）
+* 【http  】      修复CVE-2022-22885，HttpGlobalConfig可选关闭信任host（issue#2042@Github）
+* 【core  】      修复DateUtil.betweenYear闰年2月问题（issue#I97U3J@Gitee）
+* 【captcha】     修复Graphics2D的资源没释放问题（issue#I98PYN@Gitee）
+* 【core  】      修复ClassUtil.getTypeArgument() 获取泛型存在null问题（issue#3516@Github）
+* 【core  】      修复图片操作未调用flush导致资源未释放问题（issue#I9C7NA@Gitee）
+* 【cron  】      修复cron中在小月时使用“L”的计算问题（pr#1189@Gitee）
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.26(2024-02-10)
+
+### 🐣新特性
+* 【db    】      RedisDS增加user支持（issue#I8XEQ4@Gitee）
+* 【core  】      MapUtil增加partition方法（pr#1170@Gitee）
+* 【core  】      增加Version类（issue#I8Z3VE@Gitee）
+
+### 🐞Bug修复
+* 【crypto】      修复BouncyCastleProvider导致graalvm应用报错UnsupportedFeatureError（pr#3464@Github）
+* 【http  】      修复UserAgentUtil对QQ浏览器识别问题（issue#I8X5XQ@Gitee）
+* 【core  】      修复BeanToMapCopier获取类型数组越界问题（issue#3468@Github）
+* 【extra 】      修复SshjSftpSession关闭导致的问题（issue#3472@Github）
+* 【http  】      修复HtmlUtil.removeHtmlAttr处理空格问题（issue#I8YV0K@Gitee）
+* 【core  】      修复CollUtil.containsAll在coll2长度大于coll1时逻辑歧义问题（issue#I8Z2Q4@Gitee）
+* 【poi   】      修复当sheetName 不存在时，ExcelUtil.getReader方法不会释放文件问题（issue#I8ZIQC@Gitee）
+* 【crypto】      通过添加系统属性hutool.crypto.decodeHex强制关闭hex识别以解决hex和Base64歧义问题（issue#I90M9D@Gitee）
+* 【core  】      修复VersionComparator违反传递问题（issue#I8Z3VE@Gitee）
+
+-------------------------------------------------------------------------------------------------------------
+# 5.8.25(2024-01-11)
 
 ### 🐣新特性
 * 【core  】      WatchServer新增通过Path获取WatchKey方法（pr#1145@Gitee）
 * 【core  】      CopyOptions中增加setAutoTransCamelCase方法（issue#3452@Github）
+* 【captcha】     验证码生成器增加构造方法，可自定义随机数字符集（pr#1147@Gitee）
 
 ### 🐞Bug修复
 * 【core  】      修复StrJoin当append内容后调用length()会出现空指针问题（issue#3444@Github）
@@ -14,6 +298,9 @@
 * 【core  】      修复RandomUtil.randomInt,RandomUtil.randomLong边界问题（pr#3450@Github）
 * 【db    】      修复Druid连接池无法设置部分属性问题（issue#I8STFC@Gitee）
 * 【core  】      修复金额转换为英文时缺少 trillion 单位问题（pr#3454@Github）
+* 【json  】      增加ParseConfig，通过增加maxNestingDepth参数避免StackOverflowError问题，修复CVE-2022-45688漏洞（issue#2748@Github）
+* 【system】      修复UserInfo中用户名加/问题（pr#3458@Github）
+* 【core  】      修复NumberUtil.toBigDecimal方法报StackOverflowError(CVE-2023-51080)（issue#3423@Github）
 
 -------------------------------------------------------------------------------------------------------------
 # 5.8.24(2023-12-23)
@@ -814,4 +1101,4 @@
 * 【core   】     修复农历转公历在闰月时错误（issue#I4ZSGJ@Gitee）
 
 # 5.7.x 或更早版本
-* [https://gitee.com/dromara/hutool/blob/v5-master/CHANGELOG_5.0-5.7.md](https://gitee.com/dromara/hutool/blob/v5-master/CHANGELOG_5.0-5.7.md)
+* [https://gitee.com/chinabugotech/hutool/blob/v5-master/CHANGELOG_5.0-5.7.md](https://gitee.com/chinabugotech/hutool/blob/v5-master/CHANGELOG_5.0-5.7.md)

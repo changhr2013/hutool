@@ -79,6 +79,9 @@ public class FileResource implements Resource, Serializable {
 
 	@Override
 	public InputStream getStream() throws NoResourceException {
+		if (!this.file.exists()) {
+			throw new NoResourceException("File [{}] not exist!", this.file.getAbsolutePath());
+		}
 		return FileUtil.getInputStream(this.file);
 	}
 

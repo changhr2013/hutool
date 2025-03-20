@@ -1,7 +1,6 @@
 package cn.hutool.extra.compress.archiver;
 
 import cn.hutool.core.lang.Filter;
-import cn.hutool.core.util.StrUtil;
 
 import java.io.Closeable;
 import java.io.File;
@@ -31,7 +30,7 @@ public interface Archiver extends Closeable {
 	 * @return this
 	 */
 	default Archiver add(File file, Filter<File> filter) {
-		return add(file, StrUtil.SLASH, filter);
+		return add(file, null, filter);
 	}
 
 	/**

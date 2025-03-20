@@ -1,0 +1,79 @@
+package cn.hutool.extra.mail;
+
+import cn.hutool.core.io.FileUtil;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import java.io.InputStream;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+/**
+ * 邮件发送测试
+ * @author looly
+ *
+ */
+public class JakartaMailTest {
+
+	@Test
+	@Disabled
+	public void sendWithFileTest() {
+		JakartaMailUtil.send("hutool@foxmail.com", "测试", "<h1>邮件来自Hutool测试</h1>", true, FileUtil.file("d:/测试附件文本.txt"));
+	}
+
+	@Test
+	@Disabled
+	public void sendWithLongNameFileTest() {
+		//附件名长度大于60时的测试
+		JakartaMailUtil.send("hutool@foxmail.com", "测试", "<h1>邮件来自Hutool测试</h1>", true, FileUtil.file("d:/6-LongLong一阶段平台建设周报2018.3.12-3.16.xlsx"));
+	}
+
+	@Test
+	@Disabled
+	public void sendWithImageTest() {
+		Map<String, InputStream> map = new HashMap<>();
+		map.put("testImage", FileUtil.getInputStream("f:/test/me.png"));
+		JakartaMailUtil.sendHtml("hutool@foxmail.com", "测试", "<h1>邮件来自Hutool测试</h1><img src=\"cid:testImage\" />", map);
+	}
+
+	@Test
+	@Disabled
+	public void sendHtmlWithImageTest() {
+		Map<String, InputStream> map = new HashMap<>();
+		InputStream in = getClass().getClassLoader().getResourceAsStream("image/hutool.png");
+		map.put("<image-1>", in);
+		JakartaMailUtil.sendHtml("hutool@foxmail.com;li7hai26@outlook.com", "测试", "<h1>邮件来自Hutool测试</h1><img src=\"cid:image-1\" />", map);
+	}
+
+	@Test
+	@Disabled
+	public void sendHtmlTest() {
+		JakartaMailUtil.send("hutool@foxmail.com", "测试", "<h1>邮件来自Hutool测试</h1>", true);
+	}
+
+	@Test
+	@Disabled
+	public void sendByAccountTest() {
+		MailAccount account = new MailAccount();
+		account.setHost("smtp.yeah.net");
+		account.setPort(465);
+		account.setSslEnable(true);
+		account.setFrom("hutool@yeah.net");
+		account.setUser("hutool");
+		account.setPass("123456");
+		JakartaMailUtil.send(account, "hutool@foxmail.com", "测试", "<h1>邮件来自Hutool测试</h1>", true);
+	}
+
+	@Test
+	public void mailAccountTest() {
+		MailAccount account = new MailAccount();
+		account.setFrom("hutool@yeah.net");
+		account.setDebug(true);
+		account.defaultIfEmpty();
+		Properties props = account.getSmtpProps();
+		assertEquals("true", props.getProperty("mail.debug"));
+	}
+}

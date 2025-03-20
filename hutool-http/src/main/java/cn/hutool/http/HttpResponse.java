@@ -1,5 +1,6 @@
 package cn.hutool.http;
 
+import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.convert.Convert;
 import cn.hutool.core.io.FastByteArrayOutputStream;
 import cn.hutool.core.io.FileUtil;
@@ -326,7 +327,7 @@ public class HttpResponse extends HttpBase<HttpResponse> implements Closeable {
 	 * 将响应内容写出到文件-避免未完成的文件<br>
 	 * 异步模式下直接读取Http流写出，同步模式下将存储在内存中的响应内容写出<br>
 	 * 写出后会关闭Http流（异步模式）<br>
-	 * 来自：https://gitee.com/dromara/hutool/pulls/407<br>
+	 * 来自：https://gitee.com/chinabugotech/hutool/pulls/407<br>
 	 * 此方法原理是先在目标文件同级目录下创建临时文件，下载之，等下载完毕后重命名，避免因下载错误导致的文件不完整。
 	 *
 	 * @param targetFileOrDir 写出到的文件或目录
@@ -467,24 +468,84 @@ public class HttpResponse extends HttpBase<HttpResponse> implements Closeable {
 
 	/**
 	 * 从Content-Disposition头中获取文件名
-	 * @param paramName 文件参数名
 	 *
+	 * @return 文件名，empty表示无
+	 */
+	public String getFileNameFromDisposition() {
+		return getFileNameFromDisposition(null);
+	}
+
+	/**
+	 * 从Content-Disposition头中获取文件名，以参数名为`filename`为例，规则为：
+	 * <ul>
+	 *     <li>首先按照RFC5987规范检查`filename*`参数对应的值，即：`filename*="example.txt"`，则获取`example.txt`</li>
+	 *     <li>如果找不到`filename*`参数，则检查`filename`参数对应的值，即：`filename="example.txt"`，则获取`example.txt`</li>
+	 * </ul>
+	 * 按照规范，`Content-Disposition`可能返回多个，此处遍历所有返回头，并且`filename*`始终优先获取，即使`filename`存在并更靠前。<br>
+	 * 参考：https://developer.mozilla.org/zh-CN/docs/Web/HTTP/Headers/Content-Disposition
+	 *
+	 * @param paramName 文件参数名，如果为{@code null}则使用默认的`filename`
 	 * @return 文件名，empty表示无
 	 */
 	public String getFileNameFromDisposition(String paramName) {
 		paramName = ObjUtil.defaultIfNull(paramName, "filename");
+		final List<String> dispositions = headerList(Header.CONTENT_DISPOSITION.getValue());
 		String fileName = null;
-		final String disposition = header(Header.CONTENT_DISPOSITION);
-		if (StrUtil.isNotBlank(disposition)) {
-			fileName = ReUtil.get(paramName+"=\"(.*?)\"", disposition, 1);
-			if (StrUtil.isBlank(fileName)) {
-				fileName = StrUtil.subAfter(disposition, paramName + "=", true);
+		if (CollUtil.isNotEmpty(dispositions)) {
+
+			// filename* 采用了 RFC 5987 中规定的编码方式，优先读取
+			fileName = getFileNameFromDispositions(dispositions, StrUtil.addSuffixIfNot(paramName, "*"));
+			if ((!StrUtil.endWith(fileName, "*")) && StrUtil.isBlank(fileName)) {
+				fileName = getFileNameFromDispositions(dispositions, paramName);
 			}
 		}
+
 		return fileName;
 	}
 
 	// ---------------------------------------------------------------- Private method start
+	/**
+	 * 从Content-Disposition头中获取文件名
+	 *
+	 * @param dispositions Content-Disposition头列表
+	 * @param paramName    文件参数名
+	 * @return 文件名，empty表示无
+	 */
+	private static String getFileNameFromDispositions(final List<String> dispositions, String paramName) {
+		// 正则转义
+		paramName = StrUtil.replace(paramName, "*", "\\*");
+		String fileName = null;
+		for (final String disposition : dispositions) {
+			fileName = ReUtil.getGroup1(paramName + "=([^;]+)", disposition);
+			if (StrUtil.isNotBlank(fileName)) {
+				break;
+			}
+		}
+		return getRfc5987Value(fileName);
+	}
+
+	/**
+	 * 获取rfc5987标准的值，标准见：https://www.rfc-editor.org/rfc/rfc5987#section-3.2.1<br>
+	 * 包括：
+	 *
+	 *<ul>
+	 *     <li>Non-extended：无双引号包裹的值</li>
+	 *     <li>Non-extended：双引号包裹的值</li>
+	 *     <li>Extended notation：编码'语言'值</li>
+	 *</ul>
+	 *
+	 * @param value 值
+	 * @return 结果值
+	 */
+	private static String getRfc5987Value(final String value){
+		final List<String> split = StrUtil.split(value, '\'');
+		if(3 == split.size()){
+			return split.get(2);
+		}
+
+		// 普通值
+		return StrUtil.unWrap(value, '"');
+	}
 
 	/**
 	 * 初始化Http响应，并在报错时关闭连接。<br>
@@ -632,7 +693,7 @@ public class HttpResponse extends HttpBase<HttpResponse> implements Closeable {
 		} catch (IORuntimeException e) {
 			//noinspection StatementWithEmptyBody
 			if (isIgnoreEOFError
-					&& (e.getCause() instanceof EOFException || StrUtil.containsIgnoreCase(e.getMessage(), "Premature EOF"))) {
+				&& (e.getCause() instanceof EOFException || StrUtil.containsIgnoreCase(e.getMessage(), "Premature EOF"))) {
 				// 忽略读取HTTP流中的EOF错误
 			} else {
 				throw e;

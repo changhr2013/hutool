@@ -2,9 +2,10 @@ package cn.hutool.cache;
 
 import cn.hutool.cache.impl.WeakCache;
 import cn.hutool.core.lang.Console;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class WeakCacheTest {
 
@@ -14,24 +15,24 @@ public class WeakCacheTest {
 		cache.put("abc", "123");
 		cache.put("def", "456");
 
-		Assert.assertEquals(2, cache.size());
+		assertEquals(2, cache.size());
 
 		// 检查被MutableObj包装的key能否正常移除
 		cache.remove("abc");
 
-		Assert.assertEquals(1, cache.size());
+		assertEquals(1, cache.size());
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void removeByGcTest(){
-		// https://gitee.com/dromara/hutool/issues/I51O7M
+		// https://gitee.com/chinabugotech/hutool/issues/I51O7M
 		WeakCache<String, String> cache = new WeakCache<>(-1);
 		cache.put("a", "1");
 		cache.put("b", "2");
 
 		// 监听
-		Assert.assertEquals(2, cache.size());
+		assertEquals(2, cache.size());
 		cache.setListener(Console::log);
 
 		// GC测试

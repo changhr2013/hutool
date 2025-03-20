@@ -3,12 +3,7 @@ package cn.hutool.core.util;
 import cn.hutool.core.lang.ParameterizedTypeImpl;
 import cn.hutool.core.lang.reflect.ActualTypeMapperPool;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
-import java.lang.reflect.TypeVariable;
-import java.lang.reflect.WildcardType;
+import java.lang.reflect.*;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -309,7 +304,6 @@ public class TypeUtil {
 	 *
 	 * @param clazz 类
 	 * @return 泛型父类或接口数组
-	 * @since 6.0.0
 	 */
 	public static ParameterizedType[] getGenerics(final Class<?> clazz) {
 		final List<ParameterizedType> result = new ArrayList<>();
@@ -326,8 +320,9 @@ public class TypeUtil {
 		final Type[] genericInterfaces = clazz.getGenericInterfaces();
 		if (ArrayUtil.isNotEmpty(genericInterfaces)) {
 			for (final Type genericInterface : genericInterfaces) {
-				if (genericInterface instanceof ParameterizedType) {
-					result.add((ParameterizedType) genericInterface);
+				final ParameterizedType parameterizedType = toParameterizedType(genericInterface);
+				if(null != parameterizedType){
+					result.add(parameterizedType);
 				}
 			}
 		}
@@ -388,7 +383,7 @@ public class TypeUtil {
 		if (null == field) {
 			return null;
 		}
-		return getActualType(ObjectUtil.defaultIfNull(type, field.getDeclaringClass()), field.getGenericType());
+		return getActualType(ObjectUtil.defaultIfNull(type, field::getDeclaringClass), field.getGenericType());
 	}
 
 	/**
@@ -411,6 +406,13 @@ public class TypeUtil {
 
 		if (typeVariable instanceof TypeVariable) {
 			return ActualTypeMapperPool.getActualType(type, (TypeVariable<?>) typeVariable);
+		}
+		if (typeVariable instanceof GenericArrayType) {
+			//return ActualTypeMapperPool.getActualType(type, (GenericArrayType) typeVariable);
+			final Type actualType = ActualTypeMapperPool.getActualType(type, (GenericArrayType) typeVariable);
+			if(null != actualType){
+				return actualType;
+			}
 		}
 
 		// 没有需要替换的泛型变量，原样输出

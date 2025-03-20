@@ -132,7 +132,8 @@ public interface RegexPool {
 	/**
 	 * MAC地址正则
 	 */
-	String MAC_ADDRESS = "((?:[a-fA-F0-9]{1,2}[:-]){5}[a-fA-F0-9]{1,2})|0x(\\d{12}).+ETHER";
+	//String MAC_ADDRESS = "((?:[a-fA-F0-9]{1,2}[:-]){5}[a-fA-F0-9]{1,2})|0x(\\d{12}).+ETHER";
+	String MAC_ADDRESS = "((?:[a-fA-F0-9]{1,2}[:-]){5}[a-fA-F0-9]{1,2})|((?:[a-fA-F0-9]{1,4}[.]){2}[a-fA-F0-9]{1,4})|[a-fA-F0-9]{12}|0x(\\d{12}).+ETHER";
 	/**
 	 * 16进制字符串
 	 */
@@ -140,14 +141,14 @@ public interface RegexPool {
 	/**
 	 * 时间正则
 	 */
-	String TIME = "\\d{1,2}:\\d{1,2}(:\\d{1,2})?";
+	String TIME = "\\d{1,2}[:时]\\d{1,2}([:分]\\d{1,2})?秒?";
 	/**
 	 * 中国车牌号码（兼容新能源车牌）
 	 */
 	String PLATE_NUMBER =
-			//https://gitee.com/dromara/hutool/issues/I1B77H?from=project-issue
+			//https://gitee.com/chinabugotech/hutool/issues/I1B77H?from=project-issue
 			"^(([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z](([0-9]{5}[ABCDEFGHJK])|([ABCDEFGHJK]([A-HJ-NP-Z0-9])[0-9]{4})))|" +
-					//https://gitee.com/dromara/hutool/issues/I1BJHE?from=project-issue
+					//https://gitee.com/chinabugotech/hutool/issues/I1BJHE?from=project-issue
 					"([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领]\\d{3}\\d{1,3}[领])|" +
 					"([京津沪渝冀豫云辽黑湘皖鲁新苏浙赣鄂桂甘晋蒙陕吉闽贵粤青藏川宁琼使领][A-Z][A-HJ-NP-Z0-9]{4}[A-HJ-NP-Z0-9挂学警港澳使领]))$";
 
@@ -221,5 +222,5 @@ public interface RegexPool {
 	 * 总结中文姓名：2-60位，只能是中文和维吾尔族的点·
 	 * 放宽汉字范围：如生僻姓名 刘欣䶮yǎn
 	 */
-	String CHINESE_NAME = "^[\u2E80-\u9FFF·]{2,60}$";
+	String CHINESE_NAME = "^[\u3400-\u9FFF·]{2,60}$";
 }

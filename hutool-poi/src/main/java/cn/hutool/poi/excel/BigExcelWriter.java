@@ -152,16 +152,21 @@ public class BigExcelWriter extends ExcelWriter {
 
 	@Override
 	public BigExcelWriter autoSizeColumnAll() {
+		return autoSizeColumnAll(0);
+	}
+
+	@Override
+	public BigExcelWriter autoSizeColumnAll(float widthRatio) {
 		final SXSSFSheet sheet = (SXSSFSheet) this.sheet;
 		sheet.trackAllColumnsForAutoSizing();
-		super.autoSizeColumnAll();
+		super.autoSizeColumnAll(widthRatio);
 		sheet.untrackAllColumnsForAutoSizing();
 		return this;
 	}
 
 	@Override
 	public ExcelWriter flush(OutputStream out, boolean isCloseOut) throws IORuntimeException {
-		if (false == isFlushed) {
+		if (!isFlushed) {
 			isFlushed = true;
 			return super.flush(out, isCloseOut);
 		}
@@ -170,7 +175,7 @@ public class BigExcelWriter extends ExcelWriter {
 
 	@Override
 	public void close() {
-		if (null != this.destFile && false == isFlushed) {
+		if (null != this.destFile && !isFlushed) {
 			flush();
 		}
 

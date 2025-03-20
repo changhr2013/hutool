@@ -149,13 +149,32 @@ public class CronPattern {
 	 * @return 匹配到的下一个时间
 	 */
 	public Calendar nextMatchAfter(Calendar calendar) {
-		Calendar next = nextMatchAfter(PatternUtil.getFields(calendar, true), calendar.getTimeZone());
-		if (false == match(next, true)) {
-			next.set(Calendar.DAY_OF_MONTH, next.get(Calendar.DAY_OF_MONTH) + 1);
-			next = CalendarUtil.beginOfDay(next);
-			return nextMatchAfter(next);
+		// issue#I9FQUA，当提供的时间已经匹配表达式时，增加1秒以匹配下一个时间
+		if(match(calendar, true)){
+			final Calendar newCalendar = Calendar.getInstance(calendar.getTimeZone());
+			newCalendar.setTimeInMillis(calendar.getTimeInMillis() + 1000);
+			calendar = newCalendar;
 		}
-		return next;
+
+		return nextMatch(calendar);
+	}
+
+	/**
+	 * 返回匹配到的下一个时间，如果给定时间匹配，直接返回
+	 *
+	 * @param calendar 时间
+	 * @return 匹配到的下一个时间
+	 * @since 5.8.30
+	 */
+	public Calendar nextMatch(final Calendar calendar) {
+		Calendar next = nextMatchAfter(PatternUtil.getFields(calendar, true), calendar.getTimeZone());
+		if (match(next, true)) {
+			return next;
+		}
+
+		next.set(Calendar.DAY_OF_MONTH, next.get(Calendar.DAY_OF_MONTH) + 1);
+		next = CalendarUtil.beginOfDay(next);
+		return nextMatch(next);
 	}
 
 	@Override

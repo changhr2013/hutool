@@ -153,7 +153,8 @@ public class ConverterRegistry implements Serializable {
 	 */
 	@SuppressWarnings("unchecked")
 	public <T> Converter<T> getDefaultConverter(Type type) {
-		return (null == defaultConverterMap) ? null : (Converter<T>) defaultConverterMap.get(TypeUtil.getClass(type));
+		final Class<?> key = TypeUtil.getClass(type);
+		return (null == defaultConverterMap || null == key) ? null : (Converter<T>) defaultConverterMap.get(key);
 	}
 
 	/**
@@ -337,6 +338,12 @@ public class ConverterRegistry implements Serializable {
 		if("java.lang.Class".equals(rowType.getName())){
 			final ClassConverter converter = new ClassConverter();
 			return (T) converter.convert(value, (Class<?>) defaultValue);
+		}
+
+		// 空值转空Bean
+		if(ObjectUtil.isEmpty(value)){
+			// issue#3649 空值转空对象，则直接实例化
+			return ReflectUtil.newInstanceIfPossible(rowType);
 		}
 
 		// 表示非需要特殊转换的对象

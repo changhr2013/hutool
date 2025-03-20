@@ -13,11 +13,11 @@
 package cn.hutool.json;
 
 import lombok.Data;
-import org.junit.Assert;
-import org.junit.Test;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.Test;
 
 /**
- * https://github.com/dromara/hutool/issues/3051
+ * https://github.com/chinabugotech/hutool/issues/3051
  */
 public class Issue3051Test {
 	@Test
@@ -25,14 +25,14 @@ public class Issue3051Test {
 		final JSONObject jsonObject = JSONUtil.parseObj(new EmptyBean(),
 			JSONConfig.create().setIgnoreError(true));
 
-		Assert.assertEquals("{}", jsonObject.toString());
+		assertEquals("{}", jsonObject.toString());
 	}
 
 	@Test
 	public void parseTest2() {
 		final JSONObject jsonObject = JSONUtil.parseObj(new EmptyBean());
 
-		Assert.assertEquals("{}", jsonObject.toString());
+		assertEquals("{}", jsonObject.toString());
 	}
 
 	@Data

@@ -3,6 +3,7 @@ package cn.hutool.json;
 import cn.hutool.core.bean.BeanPath;
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.lang.Filter;
+import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.lang.Validator;
 import cn.hutool.core.lang.mutable.Mutable;
 import cn.hutool.core.lang.mutable.MutableObj;
@@ -13,6 +14,7 @@ import cn.hutool.json.serialize.JSONWriter;
 
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
@@ -195,7 +197,7 @@ public class JSONArray implements JSON, JSONGetter<Integer>, List<Object>, Rando
 	 */
 	public String join(String separator) throws JSONException {
 		return StrJoiner.of(separator)
-				.append(this, InternalJSONUtil::valueToString).toString();
+			.append(this, InternalJSONUtil::valueToString).toString();
 	}
 
 	@Override
@@ -216,6 +218,11 @@ public class JSONArray implements JSON, JSONGetter<Integer>, List<Object>, Rando
 	@Override
 	public <T> T getByPath(String expression, Class<T> resultType) {
 		return JSONConverter.jsonConvert(resultType, getByPath(expression), getConfig());
+	}
+
+	@Override
+	public <T> T getByPath(String expression, TypeReference<T> targetType) {
+		return JSONConverter.jsonConvert(targetType, getByPath(expression), getConfig());
 	}
 
 	@Override
@@ -445,12 +452,17 @@ public class JSONArray implements JSON, JSONGetter<Integer>, List<Object>, Rando
 
 		if (index >= size()) {
 			add(index, element);
+			return null;
 		}
 		return this.rawList.set(index, JSONUtil.wrap(element, this.config));
 	}
 
 	@Override
 	public void add(int index, Object element) {
+		final boolean ignoreNullValue = config.isIgnoreNullValue();
+		if (null == element && ignoreNullValue) {
+			return;
+		}
 		if (index < 0) {
 			throw new JSONException("JSONArray[{}] not found.", index);
 		}
@@ -458,12 +470,14 @@ public class JSONArray implements JSON, JSONGetter<Integer>, List<Object>, Rando
 			InternalJSONUtil.testValidity(element);
 			this.rawList.add(index, JSONUtil.wrap(element, this.config));
 		} else {
-			// issue#3286, 增加安全检查，最多增加10倍
-			Validator.checkIndexLimit(index, this.size());
-			while (index != this.size()) {
-				this.add(JSONNull.NULL);
+			if(false == ignoreNullValue){
+				// issue#3286, 增加安全检查，最多增加10倍
+				Validator.checkIndexLimit(index, this.size());
+				while (index != this.size()) {
+					this.add(JSONNull.NULL);
+				}
 			}
-			this.set(element);
+			this.add(element);
 		}
 
 	}
@@ -594,6 +608,13 @@ public class JSONArray implements JSON, JSONGetter<Integer>, List<Object>, Rando
 				return false;
 			}
 		}
+
+		// issue#3759
+		final boolean ignoreNullValue = this.config.isIgnoreNullValue();
+		if (ObjectUtil.isNull(obj) && ignoreNullValue) {
+			return false;
+		}
+
 		return this.rawList.add(obj);
 	}
 }

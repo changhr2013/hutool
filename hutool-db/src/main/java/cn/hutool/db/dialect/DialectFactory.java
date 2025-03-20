@@ -4,14 +4,7 @@ import cn.hutool.core.map.SafeConcurrentHashMap;
 import cn.hutool.core.util.ClassLoaderUtil;
 import cn.hutool.core.util.ReUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.db.dialect.impl.AnsiSqlDialect;
-import cn.hutool.db.dialect.impl.H2Dialect;
-import cn.hutool.db.dialect.impl.MysqlDialect;
-import cn.hutool.db.dialect.impl.OracleDialect;
-import cn.hutool.db.dialect.impl.PhoenixDialect;
-import cn.hutool.db.dialect.impl.PostgresqlDialect;
-import cn.hutool.db.dialect.impl.SqlServer2012Dialect;
-import cn.hutool.db.dialect.impl.Sqlite3Dialect;
+import cn.hutool.db.dialect.impl.*;
 import cn.hutool.log.StaticLog;
 
 import javax.sql.DataSource;
@@ -52,7 +45,8 @@ public class DialectFactory implements DriverNamePool {
 	 */
 	private static Dialect internalNewDialect(String driverName) {
 		if (StrUtil.isNotBlank(driverName)) {
-			if (DRIVER_MYSQL.equalsIgnoreCase(driverName) || DRIVER_MYSQL_V6.equalsIgnoreCase(driverName)) {
+			if (DRIVER_MYSQL.equalsIgnoreCase(driverName) || DRIVER_MYSQL_V6.equalsIgnoreCase(driverName)
+				|| DRIVER_GOLDENDB.equalsIgnoreCase(driverName)) {
 				return new MysqlDialect();
 			} else if (DRIVER_ORACLE.equalsIgnoreCase(driverName) || DRIVER_ORACLE_OLD.equalsIgnoreCase(driverName)) {
 				return new OracleDialect();
@@ -66,6 +60,8 @@ public class DialectFactory implements DriverNamePool {
 				return new SqlServer2012Dialect();
 			} else if (DRIVER_PHOENIX.equalsIgnoreCase(driverName)) {
 				return new PhoenixDialect();
+			} else if (DRIVER_DM7.equalsIgnoreCase(driverName)) {
+				return new DmDialect();
 			}
 		}
 		// 无法识别可支持的数据库类型默认使用ANSI方言，可兼容大部分SQL语句
@@ -105,6 +101,8 @@ public class DialectFactory implements DriverNamePool {
 		String driver = null;
 		if (nameContainsProductInfo.contains("mysql") || nameContainsProductInfo.contains("cobar")) {
 			driver = ClassLoaderUtil.isPresent(DRIVER_MYSQL_V6, classLoader) ? DRIVER_MYSQL_V6 : DRIVER_MYSQL;
+		} else if (nameContainsProductInfo.contains("oceanbase")) {
+			driver = DRIVER_OCEANBASE;
 		} else if (nameContainsProductInfo.contains("oracle")) {
 			driver = ClassLoaderUtil.isPresent(DRIVER_ORACLE, classLoader) ? DRIVER_ORACLE : DRIVER_ORACLE_OLD;
 		} else if (nameContainsProductInfo.contains("postgresql")) {
@@ -167,6 +165,9 @@ public class DialectFactory implements DriverNamePool {
 		} else if (nameContainsProductInfo.contains("opengauss")) {
 			// OpenGauss
 			driver = DRIVER_OPENGAUSS;
+		} else if (nameContainsProductInfo.contains("goldendb")) {
+			// GoldenDB
+			driver = DRIVER_GOLDENDB;
 		}
 
 		return driver;

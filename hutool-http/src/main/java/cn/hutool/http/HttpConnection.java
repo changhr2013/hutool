@@ -124,7 +124,7 @@ public class HttpConnection {
 					HttpGlobalConfig.allowPatch();
 				} catch (Exception ignore){
 					// ignore
-					// https://github.com/dromara/hutool/issues/2832
+					// https://github.com/chinabugotech/hutool/issues/2832
 				}
 			}
 		}
@@ -230,6 +230,32 @@ public class HttpConnection {
 	}
 
 	/**
+	 * 设置请求头<br>
+	 * 不覆盖原有请求头并判断是否需要聚合请求头
+	 *
+	 * @param headerMap 请求头
+	 * @param isOverride 是否覆盖
+	 * @param isHeaderAggregated 是否聚合
+	 * @return this
+	 * @since 5.8.37
+	 */
+	public HttpConnection header(Map<String, List<String>> headerMap, boolean isOverride, boolean isHeaderAggregated) {
+		if (!isHeaderAggregated){
+			return header(headerMap,isOverride);
+		}
+		if (MapUtil.isNotEmpty(headerMap)) {
+			String name;
+			for (Entry<String, List<String>> entry : headerMap.entrySet()) {
+				name = entry.getKey();
+				List<String> values = entry.getValue();
+				String headValues = StrUtil.join(",", values);
+				this.header(name, StrUtil.nullToEmpty(headValues), true);
+			}
+		}
+		return this;
+	}
+
+	/**
 	 * 获取Http请求头
 	 *
 	 * @param name Header名
@@ -276,7 +302,10 @@ public class HttpConnection {
 			// Https请求
 			final HttpsURLConnection httpsConn = (HttpsURLConnection) conn;
 			// 验证域
-			httpsConn.setHostnameVerifier(ObjectUtil.defaultIfNull(hostnameVerifier, DefaultSSLInfo.TRUST_ANY_HOSTNAME_VERIFIER));
+			httpsConn.setHostnameVerifier(ObjectUtil.defaultIfNull(hostnameVerifier,
+				// CVE-2022-22885 https://github.com/chinabugotech/hutool/issues/2042
+				// 增加全局变量可选是否不验证host
+				HttpGlobalConfig.isTrustAnyHost() ? DefaultSSLInfo.TRUST_ANY_HOSTNAME_VERIFIER : HttpsURLConnection.getDefaultHostnameVerifier()));
 			httpsConn.setSSLSocketFactory(ObjectUtil.defaultIfNull(ssf, DefaultSSLInfo.DEFAULT_SSF));
 		}
 
@@ -344,6 +373,20 @@ public class HttpConnection {
 	public HttpConnection setCookie(String cookie) {
 		if (cookie != null) {
 			header(Header.COOKIE, cookie, true);
+		}
+		return this;
+	}
+
+	/**
+	 * 设置固定长度的流模式，会设置HTTP请求头中的Content-Length字段，告知服务器整个请求体的精确字节大小。<br>
+	 * 这在上传文件或大数据量时非常有用，因为它允许服务器准确地知道何时接收完所有的请求数据，而不需要依赖于连接的关闭来判断数据传输的结束。
+	 *
+	 * @param contentLength 固定长度
+	 * @return this
+	 */
+	public HttpConnection setFixedLengthStreamingMode(long contentLength){
+		if(contentLength > 0){
+			conn.setFixedLengthStreamingMode(contentLength);
 		}
 		return this;
 	}

@@ -7,15 +7,16 @@ import cn.hutool.core.lang.Console;
 import cn.hutool.core.util.CharsetUtil;
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class CsvUtilTest {
 
@@ -26,13 +27,14 @@ public class CsvUtilTest {
 		CsvData data = reader.read(FileUtil.file("test.csv"));
 		List<CsvRow> rows = data.getRows();
 		final CsvRow row0 = rows.get(0);
-		Assert.assertEquals("sss,sss", row0.get(0));
-		Assert.assertEquals("姓名", row0.get(1));
-		Assert.assertEquals("性别", row0.get(2));
-		Assert.assertEquals("关注\"对象\"", row0.get(3));
-		Assert.assertEquals("年龄", row0.get(4));
-		Assert.assertEquals("", row0.get(5));
-		Assert.assertEquals("\"", row0.get(6));
+		assertEquals("sss,sss", row0.get(0));
+		assertEquals("姓名", row0.get(1));
+		assertEquals("性别", row0.get(2));
+		assertEquals("关注\"对象\"", row0.get(3));
+		assertEquals("年龄", row0.get(4));
+		assertEquals("", row0.get(5));
+		// 由于"""未闭合包装，因此末尾的换行符被当作包装内的内容，相当于："""\n"，转义后就是"\n
+		assertEquals("\"\n", row0.get(6));
 	}
 
 	@Test
@@ -40,18 +42,19 @@ public class CsvUtilTest {
 		CsvReader reader = CsvUtil.getReader();
 		reader.read(FileUtil.getUtf8Reader("test.csv"), (csvRow)-> {
 			// 只有一行，所以直接判断
-			Assert.assertEquals("sss,sss", csvRow.get(0));
-			Assert.assertEquals("姓名", csvRow.get(1));
-			Assert.assertEquals("性别", csvRow.get(2));
-			Assert.assertEquals("关注\"对象\"", csvRow.get(3));
-			Assert.assertEquals("年龄", csvRow.get(4));
-			Assert.assertEquals("", csvRow.get(5));
-			Assert.assertEquals("\"", csvRow.get(6));
+			assertEquals("sss,sss", csvRow.get(0));
+			assertEquals("姓名", csvRow.get(1));
+			assertEquals("性别", csvRow.get(2));
+			assertEquals("关注\"对象\"", csvRow.get(3));
+			assertEquals("年龄", csvRow.get(4));
+			assertEquals("", csvRow.get(5));
+			// 由于"""未闭合包装，因此末尾的换行符被当作包装内的内容，相当于："""\n"，转义后就是"\n
+			assertEquals("\"\n", csvRow.get(6));
 		});
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void readTest3() {
 		CsvReader reader = CsvUtil.getReader();
 		String path = FileUtil.isWindows() ? "d:/test/test.csv" : "~/test/test.csv";
@@ -64,13 +67,14 @@ public class CsvUtilTest {
 				"\"sss,sss\",姓名,\"性别\",关注\"对象\",年龄,\"\",\"\"\"\n");
 		List<CsvRow> rows = data.getRows();
 		final CsvRow row0 = rows.get(0);
-		Assert.assertEquals("sss,sss", row0.get(0));
-		Assert.assertEquals("姓名", row0.get(1));
-		Assert.assertEquals("性别", row0.get(2));
-		Assert.assertEquals("关注\"对象\"", row0.get(3));
-		Assert.assertEquals("年龄", row0.get(4));
-		Assert.assertEquals("", row0.get(5));
-		Assert.assertEquals("\"", row0.get(6));
+		assertEquals("sss,sss", row0.get(0));
+		assertEquals("姓名", row0.get(1));
+		assertEquals("性别", row0.get(2));
+		assertEquals("关注\"对象\"", row0.get(3));
+		assertEquals("年龄", row0.get(4));
+		assertEquals("", row0.get(5));
+		// 由于"""未闭合包装，因此末尾的换行符被当作包装内的内容，相当于："""\n"，转义后就是"\n
+		assertEquals("\"\n", row0.get(6));
 	}
 
 	@Test
@@ -78,18 +82,19 @@ public class CsvUtilTest {
 		CsvUtil.getReader().readFromStr("# 这是一行注释，读取时应忽略\n" +
 				"\"sss,sss\",姓名,\"性别\",关注\"对象\",年龄,\"\",\"\"\"\n",(csvRow)-> {
 			// 只有一行，所以直接判断
-			Assert.assertEquals("sss,sss", csvRow.get(0));
-			Assert.assertEquals("姓名", csvRow.get(1));
-			Assert.assertEquals("性别", csvRow.get(2));
-			Assert.assertEquals("关注\"对象\"", csvRow.get(3));
-			Assert.assertEquals("年龄", csvRow.get(4));
-			Assert.assertEquals("", csvRow.get(5));
-			Assert.assertEquals("\"", csvRow.get(6));
+			assertEquals("sss,sss", csvRow.get(0));
+			assertEquals("姓名", csvRow.get(1));
+			assertEquals("性别", csvRow.get(2));
+			assertEquals("关注\"对象\"", csvRow.get(3));
+			assertEquals("年龄", csvRow.get(4));
+			assertEquals("", csvRow.get(5));
+			// 由于"""未闭合包装，因此末尾的换行符被当作包装内的内容，相当于："""\n"，转义后就是"\n
+			assertEquals("\"\n", csvRow.get(6));
 		});
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void writeTest() {
 		String path = FileUtil.isWindows() ? "d:/test/testWrite.csv" : "~/test/testWrite.csv";
 		CsvWriter writer = CsvUtil.getWriter(path, CharsetUtil.CHARSET_UTF_8);
@@ -101,7 +106,7 @@ public class CsvUtilTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void writeBeansTest() {
 
 		@Data
@@ -137,7 +142,42 @@ public class CsvUtilTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
+	public void writeBeansWithPropertiesTest() {
+
+		@Data
+		class Student {
+			Integer id;
+			String name;
+			Integer age;
+		}
+
+		String path = FileUtil.isWindows() ? "d:/test/testWriteBeans.csv" : "~/tmp/testWriteBeans.csv";
+		CsvWriter writer = CsvUtil.getWriter(path, CharsetUtil.CHARSET_UTF_8);
+		List<Student> students = new ArrayList<>();
+		Student student1 = new Student();
+		student1.setId(1);
+		student1.setName("张三");
+		student1.setAge(18);
+
+		Student student2 = new Student();
+		student2.setId(2);
+		student2.setName("李四");
+		student2.setAge(22);
+
+		Student student3 = new Student();
+		student3.setId(3);
+		student3.setName("王五");
+		student3.setAge(31);
+
+		students.add(student1);
+		students.add(student2);
+		students.add(student3);
+		writer.writeBeans(students,"name","age");
+		writer.close();
+	}
+	@Test
+	@Disabled
 	public void readLfTest(){
 		final CsvReader reader = CsvUtil.getReader();
 		String path = FileUtil.isWindows() ? "d:/test/rw_test.csv" : "~/test/rw_test.csv";
@@ -148,7 +188,7 @@ public class CsvUtilTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void writeWrapTest(){
 		List<List<Object>> resultList=new ArrayList<>();
 		List<Object> list =new ArrayList<>();
@@ -167,7 +207,7 @@ public class CsvUtilTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void writeDataTest(){
 		@Data
 		@AllArgsConstructor

@@ -113,7 +113,7 @@ public final class UrlBuilder implements Builder<String> {
 		if(false == StrUtil.startWithAnyIgnoreCase(httpUrl, "http://", "https://")){
 			httpUrl = "http://" + httpUrl;
 		}
-		return of(httpUrl, charset);
+		return of(URLUtil.toUrlForHttp(httpUrl), charset);
 	}
 
 	/**

@@ -4,24 +4,25 @@ import cn.hutool.cache.impl.LRUCache;
 import cn.hutool.core.thread.ThreadUtil;
 import cn.hutool.core.util.RandomUtil;
 import cn.hutool.core.util.StrUtil;
-import org.junit.Assert;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 /**
- * 见：https://github.com/dromara/hutool/issues/1895<br>
+ * 见：https://github.com/chinabugotech/hutool/issues/1895<br>
  * 并发问题测试，在5.7.15前，LRUCache存在并发问题，多线程get后，map结构变更，导致null的位置不确定，
  * 并可能引起死锁。
  */
 public class LRUCacheTest {
 
 	@Test
-	@Ignore
+	@Disabled
 	public void putTest(){
-		//https://github.com/dromara/hutool/issues/2227
+		//https://github.com/chinabugotech/hutool/issues/2227
 		final LRUCache<String, String> cache = CacheUtil.newLRUCache(100, 10);
 		for (int i = 0; i < 10000; i++) {
 			//ThreadUtil.execute(()-> cache.put(RandomUtil.randomString(5), "1243", 10));
@@ -55,7 +56,7 @@ public class LRUCacheTest {
 		for (int i = 0; i < 10; i++) {
 			sb1.append(cache.get(i));
 		}
-		Assert.assertEquals("0123456789", sb1.toString());
+		assertEquals("0123456789", sb1.toString());
 
 		// 新加11，此时0最久未使用，应该淘汰0
 		cache.put(11, 11);
@@ -64,7 +65,7 @@ public class LRUCacheTest {
 		for (int i = 0; i < 10; i++) {
 			sb2.append(cache.get(i));
 		}
-		Assert.assertEquals("null123456789", sb2.toString());
+		assertEquals("null123456789", sb2.toString());
 	}
 
 	@Test
@@ -82,7 +83,7 @@ public class LRUCacheTest {
 			cache.put(StrUtil.format("key-{}", i), i);
 		}
 
-		Assert.assertEquals(7, removeCount.get());
-		Assert.assertEquals(3, cache.size());
+		assertEquals(7, removeCount.get());
+		assertEquals(3, cache.size());
 	}
 }

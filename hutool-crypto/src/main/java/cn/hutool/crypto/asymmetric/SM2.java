@@ -1,6 +1,7 @@
 package cn.hutool.crypto.asymmetric;
 
 import cn.hutool.core.lang.Assert;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.HexUtil;
 import cn.hutool.crypto.BCUtil;
 import cn.hutool.crypto.CryptoException;
@@ -292,6 +293,18 @@ public class SM2 extends AbstractAsymmetricCrypto<SM2> {
 	 * @since 5.1.6
 	 */
 	public byte[] decrypt(byte[] data, CipherParameters privateKeyParameters) throws CryptoException {
+		Assert.isTrue(data.length > 1, "Invalid SM2 cipher text, must be at least 1 byte long");
+		// 检查数据，gmssl等库生成的密文不包含04前缀（非压缩数据标识），此处检查并补充
+		// 参考：https://blog.csdn.net/softt/article/details/139978608
+		// 根据公钥压缩形态不同，密文分为两种压缩形式：
+		// C1( 03 + X ) + C3（32个字节）+ C2
+		// C1( 02 + X ) + C3（32个字节）+ C2
+		// 非压缩公钥正常形态为04 + X  + Y，由于各个算法库差异，04有时候会省略
+		// 非压缩密文正常形态为04 + C1 + C3 + C2
+		if (data[0] != 0x04 && data[0] != 0x02 && data[0] != 0x03) {
+			data = (byte[]) ArrayUtil.insert(data, 0, 0x04);
+		}
+
 		lock.lock();
 		final SM2Engine engine = getEngine();
 		try {
@@ -308,18 +321,54 @@ public class SM2 extends AbstractAsymmetricCrypto<SM2> {
 	/**
 	 * 用私钥对信息生成数字签名
 	 *
-	 * @param dataHex 被签名的数据数据
+	 * @param dataHex 被签名的数据
 	 * @return 签名
 	 */
+	public String signHexFromHex(String dataHex) {
+		return signHex(dataHex, null);
+	}
+
+	/**
+	 * 用私钥对信息生成数字签名
+	 *
+	 * @param dataHex 被签名的数据
+	 * @return 签名
+	 * @deprecated 歧义，使用{@link #signHexFromHex(String)}
+	 */
+	@Deprecated
 	public String signHex(String dataHex) {
 		return signHex(dataHex, null);
+	}
+
+	/**
+	 * 用私钥对信息生成数字签名
+	 *
+	 * @param dataHex 被签名的数据
+	 * @param idHex   可以为null，若为null，则默认withId为字节数组:"1234567812345678".getBytes()
+	 * @return 签名
+	 */
+	public String signHexFromHex(String dataHex, String idHex) {
+		return HexUtil.encodeHexStr(sign(HexUtil.decodeHex(dataHex), HexUtil.decodeHex(idHex)));
+	}
+
+	/**
+	 * 用私钥对信息生成数字签名
+	 *
+	 * @param dataHex 被签名的数据
+	 * @param idHex   可以为null，若为null，则默认withId为字节数组:"1234567812345678".getBytes()
+	 * @return 签名
+	 * @deprecated 歧义，使用{@link #signHexFromHex(String, String)}
+	 */
+	@Deprecated
+	public String signHex(String dataHex, String idHex) {
+		return HexUtil.encodeHexStr(sign(HexUtil.decodeHex(dataHex), HexUtil.decodeHex(idHex)));
 	}
 
 	/**
 	 * 用私钥对信息生成数字签名，签名格式为ASN1<br>
 	 * * 在硬件签名中，返回结果为R+S，可以通过调用{@link cn.hutool.crypto.SmUtil#rsAsn1ToPlain(byte[])}方法转换之。
 	 *
-	 * @param data 加密数据
+	 * @param data 被签名的数据
 	 * @return 签名
 	 */
 	public byte[] sign(byte[] data) {
@@ -327,21 +376,10 @@ public class SM2 extends AbstractAsymmetricCrypto<SM2> {
 	}
 
 	/**
-	 * 用私钥对信息生成数字签名
-	 *
-	 * @param dataHex 被签名的数据数据
-	 * @param idHex   可以为null，若为null，则默认withId为字节数组:"1234567812345678".getBytes()
-	 * @return 签名
-	 */
-	public String signHex(String dataHex, String idHex) {
-		return HexUtil.encodeHexStr(sign(HexUtil.decodeHex(dataHex), HexUtil.decodeHex(idHex)));
-	}
-
-	/**
 	 * 用私钥对信息生成数字签名，签名格式为ASN1<br>
 	 * 在硬件签名中，返回结果为R+S，可以通过调用{@link cn.hutool.crypto.SmUtil#rsAsn1ToPlain(byte[])}方法转换之。
 	 *
-	 * @param data 被签名的数据数据
+	 * @param data 被签名的数据
 	 * @param id   可以为null，若为null，则默认withId为字节数组:"1234567812345678".getBytes()
 	 * @return 签名
 	 */
@@ -366,7 +404,7 @@ public class SM2 extends AbstractAsymmetricCrypto<SM2> {
 	/**
 	 * 用公钥检验数字签名的合法性
 	 *
-	 * @param dataHex 的数据
+	 * @param dataHex 数据
 	 * @param signHex 签名
 	 * @return 是否验证通过
 	 * @since 5.2.0

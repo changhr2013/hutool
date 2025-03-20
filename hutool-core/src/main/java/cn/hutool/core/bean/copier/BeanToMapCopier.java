@@ -70,11 +70,13 @@ public class BeanToMapCopier extends AbsCopier<Object, Map> {
 
 			// 获取目标值真实类型并转换源值
 			final Type[] typeArguments = TypeUtil.getTypeArguments(this.targetType);
-			if(null != typeArguments){
+			if(null != typeArguments && typeArguments.length > 1){
 				//sValue = Convert.convertWithCheck(typeArguments[1], sValue, null, this.copyOptions.ignoreError);
 				sValue = this.copyOptions.convertField(typeArguments[1], sValue);
-				sValue = copyOptions.editFieldValue(sFieldName, sValue);
 			}
+
+			// 自定义值
+			sValue = copyOptions.editFieldValue(sFieldName, sValue);
 
 			// 目标赋值
 			if(null != sValue || false == copyOptions.ignoreNullValue){

@@ -19,6 +19,9 @@ import java.util.List;
  */
 public abstract class AbstractFtp implements Closeable {
 
+	/**
+	 * 默认编码
+	 */
 	public static final Charset DEFAULT_CHARSET = CharsetUtil.CHARSET_UTF_8;
 
 	protected FtpConfig ftpConfig;
@@ -205,7 +208,7 @@ public abstract class AbstractFtp implements Closeable {
 
 	/**
 	 * 下载文件-避免未完成的文件<br>
-	 * 来自：https://gitee.com/dromara/hutool/pulls/407<br>
+	 * 来自：https://gitee.com/chinabugotech/hutool/pulls/407<br>
 	 * 此方法原理是先在目标文件同级目录下创建临时文件，下载之，等下载完毕后重命名，避免因下载错误导致的文件不完整。
 	 *
 	 * @param path     文件路径

@@ -2,11 +2,15 @@ package cn.hutool.core.convert;
 
 import cn.hutool.core.lang.Assert;
 import cn.hutool.core.util.ArrayUtil;
+import cn.hutool.core.util.CharUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * 数字转中文类<br>
@@ -44,6 +48,19 @@ public class NumberChineseFormatter {
 	};
 
 	/**
+	 * 口语化映射
+	 */
+	private static final Map<String, String> COLLOQUIAL_WORDS = new HashMap<String, String>() {
+		private static final long serialVersionUID = 1L;
+		{
+			put("一十", "十");
+			put("一拾", "拾");
+			put("负一十", "负十");
+			put("负一拾", "负拾");
+		}
+	};
+
+	/**
 	 * 阿拉伯数字转换成中文,小数点后四舍五入保留两位. 使用于整数、小数的转换.
 	 *
 	 * @param amount           数字
@@ -74,8 +91,12 @@ public class NumberChineseFormatter {
 	 * @since 5.7.23
 	 */
 	public static String format(double amount, boolean isUseTraditional, boolean isMoneyMode, String negativeName, String unitName) {
+		if(StrUtil.isNullOrUndefined(unitName)){
+			unitName = "元";
+		}
+
 		if (0 == amount) {
-			return "零";
+			return isMoneyMode ? "零" + unitName + "整" : "零";
 		}
 		Assert.checkBetween(amount, -99_9999_9999_9999.99, 99_9999_9999_9999.99,
 				"Number support only: (-99999999999999.99 ~ 99999999999999.99)！");
@@ -99,7 +120,7 @@ public class NumberChineseFormatter {
 			// 金额模式下，无需“零元”
 			chineseStr.append(longToChinese(yuan, isUseTraditional));
 			if (isMoneyMode) {
-				chineseStr.append(StrUtil.isNullOrUndefined(unitName) ? "元" : unitName);
+				chineseStr.append(unitName);
 			}
 		}
 
@@ -218,6 +239,40 @@ public class NumberChineseFormatter {
 			return chinese.substring(1);
 		}
 		return chinese;
+	}
+
+	/**
+	 * 阿拉伯数字转换成中文. 使用于整数、小数的转换.
+	 * 支持多位小数
+	 *
+	 * @param amount           数字
+	 * @param isUseTraditional 是否使用繁体
+	 * @param isUseColloquial  是否使用口语化(e.g. 一十 -》 十)
+	 * @return 中文
+	 * @since 5.8.28
+	 */
+	public static String format(BigDecimal amount, boolean isUseTraditional, boolean isUseColloquial) {
+		String formatAmount;
+		if (amount.scale() <= 0) {
+			formatAmount = NumberChineseFormatter.format(amount.longValue(), isUseTraditional);
+		} else {
+			List<String> numberList = StrUtil.split(amount.toPlainString(), CharUtil.DOT);
+			// 小数部分逐个数字转换为汉字
+			StringBuilder decimalPartStr = new StringBuilder();
+			for (char decimalChar : numberList.get(1).toCharArray()) {
+				decimalPartStr.append(NumberChineseFormatter.numberCharToChinese(decimalChar, isUseTraditional));
+			}
+			formatAmount = NumberChineseFormatter.format(amount.longValue(), isUseTraditional) + "点" + decimalPartStr;
+		}
+		if (isUseColloquial) {
+			for (Map.Entry<String, String> colloquialWord : COLLOQUIAL_WORDS.entrySet()) {
+				if (formatAmount.startsWith(colloquialWord.getKey())) {
+					formatAmount = formatAmount.replaceFirst(colloquialWord.getKey(), colloquialWord.getValue());
+					break;
+				}
+			}
+		}
+		return formatAmount;
 	}
 
 	/**

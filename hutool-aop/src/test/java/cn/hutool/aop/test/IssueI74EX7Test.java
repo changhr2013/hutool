@@ -19,7 +19,7 @@ import cn.hutool.aop.proxy.ProxyFactory;
 import cn.hutool.aop.proxy.SpringCglibProxyFactory;
 import cn.hutool.core.lang.Console;
 import lombok.Setter;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class IssueI74EX7Test {
 	@Test
@@ -30,7 +30,7 @@ public class IssueI74EX7Test {
 	}
 
 	/**
-	 * https://gitee.com/dromara/hutool/issues/I74EX7<br>
+	 * https://gitee.com/chinabugotech/hutool/issues/I74EX7<br>
 	 * Enhancer.create()默认调用无参构造，有参构造或者多个构造没有很好的兼容。
 	 *
 	 */
@@ -42,7 +42,7 @@ public class IssueI74EX7Test {
 	}
 
 	/**
-	 * https://gitee.com/dromara/hutool/issues/I74EX7<br>
+	 * https://gitee.com/chinabugotech/hutool/issues/I74EX7<br>
 	 * Enhancer.create()默认调用无参构造，有参构造或者多个构造没有很好的兼容。
 	 *
 	 */

@@ -1,6 +1,7 @@
 package cn.hutool.json.serialize;
 
 import cn.hutool.core.convert.Convert;
+import cn.hutool.core.convert.NumberWithFormat;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.TemporalAccessorUtil;
 import cn.hutool.core.date.format.GlobalCustomFormat;
@@ -11,14 +12,7 @@ import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.core.util.CharUtil;
 import cn.hutool.core.util.NumberUtil;
 import cn.hutool.core.util.StrUtil;
-import cn.hutool.json.JSON;
-import cn.hutool.json.JSONArray;
-import cn.hutool.json.JSONConfig;
-import cn.hutool.json.JSONException;
-import cn.hutool.json.JSONNull;
-import cn.hutool.json.JSONObject;
-import cn.hutool.json.JSONString;
-import cn.hutool.json.JSONUtil;
+import cn.hutool.json.*;
 
 import java.io.IOException;
 import java.io.Writer;
@@ -261,7 +255,18 @@ public class JSONWriter extends Writer {
 		} else if (value instanceof Iterable || value instanceof Iterator || ArrayUtil.isArray(value)) {
 			new JSONArray(value).write(writer, indentFactor, indent);
 		} else if (value instanceof Number) {
-			writeNumberValue((Number) value);
+			// issue#IALQ0N，避免设置日期格式后writeLongAsString失效
+			if(value instanceof NumberWithFormat){
+				value = ((NumberWithFormat) value).getNumber();
+			}
+
+			if(value instanceof Long && config.isWriteLongAsString()){
+				// issue#3541
+				// long可能溢出，此时可选是否将long写出为字符串类型
+				writeStrValue(value.toString());
+			} else {
+				writeNumberValue((Number) value);
+			}
 		} else if (value instanceof Date || value instanceof Calendar || value instanceof TemporalAccessor) {
 			// issue#2572@Github
 			if(value instanceof MonthDay){

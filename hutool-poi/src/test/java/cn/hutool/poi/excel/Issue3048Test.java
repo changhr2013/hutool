@@ -2,8 +2,8 @@ package cn.hutool.poi.excel;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.io.File;
 import java.math.BigDecimal;
@@ -11,13 +11,13 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * https://github.com/dromara/hutool/issues/3048
+ * https://github.com/chinabugotech/hutool/issues/3048
  * Excel导出javaBean中有BigDecimal类型精度流失
  *
  */
 public class Issue3048Test {
 	@Test
-	@Ignore
+	@Disabled
 	public void excelOutPutBeanListToExcel(){
 		List<TestBean> excelExportList = new ArrayList<>();
 		excelExportList.add(new TestBean("1", new BigDecimal("1.22")));

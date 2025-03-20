@@ -1,17 +1,17 @@
 package cn.hutool.core.thread;
 
 import cn.hutool.core.lang.Console;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.util.concurrent.ThreadPoolExecutor;
 
 public class ExecutorBuilderTest {
 
 	@Test
-	@Ignore
+	@Disabled
 	public void CallerRunsPolicyTest(){
-		// https://gitee.com/dromara/hutool/pulls/660
+		// https://gitee.com/chinabugotech/hutool/pulls/660
 		final ThreadPoolExecutor executor = ExecutorBuilder.create().setCorePoolSize(1).setMaxPoolSize(1).setHandler(RejectPolicy.BLOCK.getValue()).build();
 		executor.execute(()-> Console.log("### 1"));
 		executor.execute(()-> Console.log("### 2"));

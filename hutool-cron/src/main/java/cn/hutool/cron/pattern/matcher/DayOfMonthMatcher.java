@@ -11,7 +11,6 @@ import java.util.List;
  * @author Looly
  */
 public class DayOfMonthMatcher extends BoolArrayMatcher {
-
 	/**
 	 * 构造
 	 *
@@ -50,4 +49,9 @@ public class DayOfMonthMatcher extends BoolArrayMatcher {
 	private static boolean isLastDayOfMonth(int value, int month, boolean isLeapYear) {
 		return value == Month.getLastDay(month - 1, isLeapYear);
 	}
+
+	public boolean isLast() {
+		return match(31);
+	}
+
 }

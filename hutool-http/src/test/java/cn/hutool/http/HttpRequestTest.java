@@ -2,12 +2,13 @@ package cn.hutool.http;
 
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.date.TimeInterval;
+import cn.hutool.core.io.resource.StringResource;
 import cn.hutool.core.lang.Console;
 import cn.hutool.core.net.SSLProtocols;
 import cn.hutool.core.net.url.UrlBuilder;
 import cn.hutool.core.util.CharsetUtil;
-import org.junit.Ignore;
-import org.junit.Test;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
 
 import java.net.CookieManager;
 import java.net.HttpCookie;
@@ -25,14 +26,14 @@ public class HttpRequestTest {
 	final String url = "http://photo.qzone.qq.com/fcgi-bin/fcg_list_album?uin=88888&outstyle=2";
 
 	@Test
-	@Ignore
+	@Disabled
 	public void getHttpsTest() {
 		final String body = HttpRequest.get("https://www.hutool.cn/").timeout(10).execute().body();
 		Console.log(body);
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void getHttpsThenTest() {
 		HttpRequest
 				.get("https://hutool.cn")
@@ -40,7 +41,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void getCookiesTest() {
 		// 检查在Connection关闭情况下Cookie是否可以正常获取
 		final HttpResponse res = HttpRequest.get("https://www.oschina.net/").execute();
@@ -50,7 +51,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void toStringTest() {
 		final String url = "https://hutool.cn?ccc=你好";
 
@@ -59,7 +60,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void asyncHeadTest() {
 		final HttpResponse response = HttpRequest.head(url).execute();
 		final Map<String, List<String>> headers = response.headers();
@@ -68,7 +69,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void asyncGetTest() {
 		final TimeInterval timer = DateUtil.timer();
 		final HttpResponse body = HttpRequest.get(url).charset("GBK").executeAsync();
@@ -80,7 +81,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void syncGetTest() {
 		final TimeInterval timer = DateUtil.timer();
 		final HttpResponse body = HttpRequest.get(url).charset("GBK").execute();
@@ -92,7 +93,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void customGetTest() {
 		// 自定义构建HTTP GET请求，发送Http GET请求，针对HTTPS安全加密，可以自定义SSL
 		final HttpRequest request = HttpRequest.get(url)
@@ -106,7 +107,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void getDeflateTest() {
 		final String res = HttpRequest.get("https://comment.bilibili.com/67573272.xml")
 				.execute().body();
@@ -114,7 +115,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void bodyTest() {
 		final String ddddd1 = HttpRequest.get("https://baijiahao.baidu.com/s").body("id=1625528941695652600").execute().body();
 		Console.log(ddddd1);
@@ -124,7 +125,7 @@ public class HttpRequestTest {
 	 * 测试GET请求附带body体是否会变更为POST
 	 */
 	@Test
-	@Ignore
+	@Disabled
 	public void getLocalTest() {
 		final List<String> list = new ArrayList<>();
 		list.add("hhhhh");
@@ -143,7 +144,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void getWithoutEncodeTest() {
 		final String url = "https://img-cloud.voc.com.cn/140/2020/09/03/c3d41b93e0d32138574af8e8b50928b376ca5ba61599127028157.png?imageMogr2/auto-orient/thumbnail/500&pid=259848";
 		final HttpRequest get = HttpUtil.createGet(url);
@@ -153,7 +154,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void followRedirectsTest() {
 		// 从5.7.19开始关闭JDK的自动重定向功能，改为手动重定向
 		// 当有多层重定向时，JDK的重定向会失效，或者说只有最后一个重定向有效，因此改为手动更易控制次数
@@ -172,7 +173,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void followRedirectsCookieTrueTest() {
 		final String url = "http://localhost:8888/redirect1";
 		CookieManager cookieManager = new CookieManager();
@@ -186,7 +187,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void followRedirectsCookieFalseTest() {
 		final String url = "http://localhost:8888/redirect1";
 		CookieManager cookieManager = new CookieManager();
@@ -199,7 +200,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void addInterceptorTest() {
 		HttpUtil.createGet("https://hutool.cn")
 				.addInterceptor(Console::log)
@@ -208,14 +209,14 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void addGlobalInterceptorTest() {
 		GlobalInterceptor.INSTANCE.addRequestInterceptor(Console::log);
 		HttpUtil.createGet("https://hutool.cn").execute();
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void getWithFormTest(){
 		final String url = "https://postman-echo.com/get";
 		final Map<String, Object> map = new HashMap<>();
@@ -225,7 +226,7 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void urlWithParamIfGetTest(){
 		final UrlBuilder urlBuilder = new UrlBuilder();
 		urlBuilder.setScheme("https").setHost("hutool.cn");
@@ -235,9 +236,52 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	@Ignore
+	@Disabled
 	public void issueI5Y68WTest() {
 		final HttpResponse httpResponse = HttpRequest.get("http://82.157.17.173:8100/app/getAddress").execute();
 		Console.log(httpResponse.body());
+	}
+
+	@Test
+	@Disabled
+	public void issueIAAE88Test() {
+		final HttpRequest request = HttpRequest.of("http://127.0.0.1:8003/com.rnd.aiq:message/message/getName/15", null);
+		Console.log(request);
+	}
+
+	@Test
+	@Disabled
+	public void testHttpResource() {
+
+		HttpRequest httpRequest = HttpRequest.post("http://127.0.0.1:8080/testHttpResource");
+		HttpResponse response = httpRequest.form("user", new HttpResource(new StringResource("{\n" +
+						"    \"name\": \"张三\",\n" +
+						"    \"age\": \"16\"\n" +
+						"}"), "application/json"))
+				.form("passport", "12456")
+				.execute();
+		Console.log(response.body());
+	}
+
+	@Test
+	@Disabled
+	public void issueIAAOC1Test() {
+		HttpGlobalConfig.setDecodeUrl(true);
+		HttpRequest request = HttpRequest.get("http://localhost:9999/qms/bus/qmsBusReportCenterData/getReportDataList?reportProcessNo=A00&goodsName=工业硫酸98%&conReportTypeId=1010100000000000007&measureDateStr=2024-07-01");
+		request.execute();
+	}
+
+	@Test
+	@Disabled
+	public void testHttpHead(){
+		Map<String,String> map = new HashMap<>();
+		map.put("test","test");
+		HttpRequest httpRequest = HttpRequest.post("http://127.0.0.1:8080/testHttpHead")
+			.header("test","test1")
+			.headerMap(map,false)
+			.headerAggregation(true);
+		System.out.println(httpRequest.headers());
+		HttpResponse execute = httpRequest.execute();
+		System.out.println(execute.body());
 	}
 }

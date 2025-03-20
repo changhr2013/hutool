@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 
 /**
  * 复制jdk16中的Optional，以及自己进行了一点调整和新增，比jdk8中的Optional多了几个实用的函数<br>
- * 详细见：<a href="https://gitee.com/dromara/hutool/pulls/426">https://gitee.com/dromara/hutool/pulls/426</a>
+ * 详细见：<a href="https://gitee.com/chinabugotech/hutool/pulls/426">https://gitee.com/chinabugotech/hutool/pulls/426</a>
  *
  * @param <T> 包裹里元素的类型
  * @author VampireAchao
@@ -163,6 +163,28 @@ public class Opt<T> {
 	 */
 	public boolean isFail() {
 		return null != this.exception;
+	}
+
+	/**
+	 * 如果包裹内容失败了，则执行传入的操作({@link Consumer#accept})
+	 *
+	 * <p> 例如执行有异常就打印结果
+	 * <pre>{@code
+	 *     Opt.ofTry(() -> 1 / 0).ifFail(Console::log);
+	 * }</pre>
+	 *
+	 * @param action 你想要执行的操作
+	 * @return this
+	 * @throws NullPointerException 如果包裹里的值存在，但你传入的操作为{@code null}时抛出
+	 */
+	public Opt<T> ifFail(final Consumer<? super Throwable> action) throws NullPointerException {
+		Objects.requireNonNull(action, "action is null");
+
+		if (isFail()) {
+			action.accept(this.exception);
+		}
+
+		return this;
 	}
 
 	/**

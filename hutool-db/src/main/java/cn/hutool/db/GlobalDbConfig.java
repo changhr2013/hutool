@@ -1,6 +1,7 @@
 package cn.hutool.db;
 
 import cn.hutool.core.io.resource.NoResourceException;
+import cn.hutool.core.util.ArrayUtil;
 import cn.hutool.db.sql.SqlLog;
 import cn.hutool.log.level.Level;
 import cn.hutool.setting.Setting;
@@ -83,18 +84,28 @@ public class GlobalDbConfig {
 				throw new NoResourceException("Customize db setting file [{}] not found !", dbSettingPath);
 			}
 		} else {
-			try {
-				setting = new Setting(DEFAULT_DB_SETTING_PATH, true);
-			} catch (NoResourceException e) {
-				// 尝试ClassPath下直接读取配置文件
-				try {
-					setting = new Setting(DEFAULT_DB_SETTING_PATH2, true);
-				} catch (NoResourceException e2) {
-					throw new NoResourceException("Default db setting [{}] or [{}] in classpath not found !", DEFAULT_DB_SETTING_PATH, DEFAULT_DB_SETTING_PATH2);
-				}
-			}
+			setting = tryDefaultDbSetting();
 		}
 		return setting;
+	}
+
+	/**
+	 * 获取自定义或默认位置数据库配置{@link Setting}
+	 *
+	 * @return 数据库配置
+	 * @since 5.8.36
+	 */
+	private static Setting tryDefaultDbSetting() {
+		final String[] defaultDbSettingPaths = {"file:" + DEFAULT_DB_SETTING_PATH, "file:" + DEFAULT_DB_SETTING_PATH2, DEFAULT_DB_SETTING_PATH, DEFAULT_DB_SETTING_PATH2};
+		for (final String settingPath : defaultDbSettingPaths) {
+			try {
+				return new Setting(settingPath, true);
+			} catch (final NoResourceException e) {
+				// ignore
+			}
+		}
+
+		throw new NoResourceException("Default db settings [{}] in classpath not found !", ArrayUtil.join(defaultDbSettingPaths, ","));
 	}
 
 	/**

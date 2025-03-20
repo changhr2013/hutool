@@ -64,6 +64,7 @@ public class PartParser {
 	 * @return {@link PartMatcher}
 	 */
 	public PartMatcher parse(String value) {
+		// 是否是查询最后一天
 		if (isMatchAllStr(value)) {
 			//兼容Quartz的"?"表达式，不会出现互斥情况，与"*"作用相同
 			return new AlwaysTrueMatcher();
@@ -226,7 +227,7 @@ public class PartParser {
 	/**
 	 * 解析单个int值，支持别名
 	 *
-	 * @param value 被解析的值
+	 * @param value      被解析的值
 	 * @param checkValue 是否检查值在有效范围内
 	 * @return 解析结果
 	 * @throws CronException 当无效数字或无效别名时抛出
